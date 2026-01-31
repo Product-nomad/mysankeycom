@@ -22,33 +22,38 @@ const SearchBar = ({ onSearch, isLoading = false }: SearchBarProps) => {
     <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
       <div className="relative group">
         <div className="absolute inset-0 gradient-hero rounded-xl opacity-0 group-focus-within:opacity-100 blur-xl transition-opacity duration-500" />
-        <div className="relative flex items-center bg-card border border-border/50 rounded-xl shadow-soft group-focus-within:shadow-glow transition-all duration-300">
-          <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
-          <Input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter a company, country, or topic to visualize flow..."
-            className="border-0 bg-transparent pl-12 pr-32 py-6 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={isLoading}
-          />
-          <Button 
-            type="submit"
-            disabled={isLoading || !query.trim()}
-            className="absolute right-2 gradient-hero text-primary-foreground font-medium px-5 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Visualize
-              </>
-            )}
-          </Button>
+        <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-card border border-border/50 rounded-xl shadow-soft group-focus-within:shadow-glow transition-all duration-300">
+          <div className="relative flex-1 flex items-center">
+            <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
+            <Input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Enter a topic to visualize..."
+              className="border-0 bg-transparent pl-12 pr-4 py-6 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
+              disabled={isLoading}
+            />
+          </div>
+          <div className="p-2 sm:pr-2 sm:pl-0">
+            <Button 
+              type="submit"
+              disabled={isLoading || !query.trim()}
+              className="w-full sm:w-auto gradient-hero text-primary-foreground font-medium px-5 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span className="hidden sm:inline">Generating...</span>
+                  <span className="sm:hidden">Loading...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Visualize
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </form>
