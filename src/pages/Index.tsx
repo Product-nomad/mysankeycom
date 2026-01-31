@@ -8,6 +8,7 @@ import SankeyChart from '@/components/SankeyChart';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import ChartSettings from '@/components/ChartSettings';
 import FlowActions from '@/components/FlowActions';
+import DiagramChat from '@/components/DiagramChat';
 import { useSankeyData } from '@/hooks/useSankeyData';
 import type { ChartSettings as ChartSettingsType } from '@/types/sankey';
 import { Zap, Globe, TrendingUp, Database, X, Loader2, MousePointerClick, ArrowLeft } from 'lucide-react';
@@ -182,6 +183,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* AI Chat - only show when diagram is active */}
+      {data && <DiagramChat data={data} query={currentQuery} />}
 
       {/* Featured Flows Section */}
       <section className="py-8 px-4 bg-muted/30" id="features">
