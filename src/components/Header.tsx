@@ -1,7 +1,30 @@
-import { GitBranch } from 'lucide-react';
+import { GitBranch, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
 const Header = () => {
-  return <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const getInitials = (email: string) => {
+    return email.substring(0, 2).toUpperCase();
+  };
+
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center">
@@ -11,20 +34,49 @@ const Header = () => {
         </div>
         
         <nav className="hidden md:flex items-center gap-8">
-          
-          
-          
+          {/* Navigation links can be added here */}
         </nav>
         
         <div className="flex items-center gap-3">
-          <Button variant="ghost" className="text-sm font-medium">
-            Sign In
-          </Button>
-          <Button className="gradient-hero text-primary-foreground text-sm font-medium">
-            Get Started
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                      {getInitials(user.email || 'U')}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-sm font-medium text-foreground">
+                  {user.email}
+                </div>
+                <DropdownMenuItem onClick={() => navigate('/my-flows')}>
+                  <User className="w-4 h-4 mr-2" />
+                  My Flows
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button variant="ghost" className="text-sm font-medium" onClick={() => navigate('/auth')}>
+                Sign In
+              </Button>
+              <Button className="gradient-hero text-primary-foreground text-sm font-medium" onClick={() => navigate('/auth')}>
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
       </div>
-    </header>;
+    </header>
+  );
 };
+
 export default Header;

@@ -1,11 +1,14 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { SankeyData } from '@/hooks/useSankeyData';
+import type { ChartSettings } from '@/types/sankey';
+import { COLOR_THEMES } from '@/types/sankey';
 
 interface SankeyChartProps {
   className?: string;
   data?: SankeyData | null;
   onNodeClick?: (nodeName: string) => void;
+  settings?: ChartSettings;
 }
 
 // Default sample data
@@ -46,90 +49,113 @@ const defaultData: SankeyData = {
   ],
 };
 
-const SankeyChart = ({ className, data, onNodeClick }: SankeyChartProps) => {
-  const chartRef = useRef<ReactECharts>(null);
-  const chartData = data || defaultData;
+const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
+  ({ className, data, onNodeClick, settings }, ref) => {
+    const chartRef = useRef<ReactECharts>(null);
+    const chartData = data || defaultData;
 
-  const option = {
-    tooltip: {
-      trigger: 'item',
-      triggerOn: 'mousemove',
-      backgroundColor: 'hsl(220, 25%, 10%)',
-      borderColor: 'hsl(220, 20%, 20%)',
-      textStyle: {
-        color: 'hsl(210, 20%, 98%)',
-        fontFamily: 'Inter, system-ui, sans-serif',
-      },
-      formatter: (params: any) => {
-        if (params.dataType === 'node') {
-          return `<div style="padding: 4px 0;">
-            <strong>${params.name}</strong>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
-              Click to expand details
-            </div>
-          </div>`;
-        }
-        return `${params.data.source} → ${params.data.target}<br/>Value: ${params.data.value}`;
-      },
-    },
-    series: [
-      {
-        type: 'sankey',
-        layout: 'none',
-        emphasis: {
-          focus: 'adjacency',
-        },
-        nodeAlign: 'justify',
-        lineStyle: {
-          color: 'gradient',
-          curveness: 0.5,
-        },
-        nodeWidth: 20,
-        nodeGap: 14,
-        label: {
+    // Forward the ref so parent can access chart instance
+    useImperativeHandle(ref, () => chartRef.current as ReactECharts);
+
+    // Apply theme colors to nodes
+    const themedNodes = chartData.nodes.map((node, index) => {
+      const themeColors = settings?.theme ? COLOR_THEMES[settings.theme] : COLOR_THEMES.default;
+      return {
+        ...node,
+        itemStyle: { color: themeColors[index % themeColors.length] },
+      };
+    });
+
+    const nodeAlign = settings?.nodeAlign || 'justify';
+    const linkOpacity = settings?.linkOpacity ?? 0.5;
+
+    const option = {
+      tooltip: {
+        trigger: 'item',
+        triggerOn: 'mousemove',
+        backgroundColor: 'hsl(220, 25%, 10%)',
+        borderColor: 'hsl(220, 20%, 20%)',
+        textStyle: {
+          color: 'hsl(210, 20%, 98%)',
           fontFamily: 'Inter, system-ui, sans-serif',
-          fontSize: 12,
-          fontWeight: 500,
-          color: 'hsl(220, 25%, 10%)',
         },
-        data: chartData.nodes,
-        links: chartData.links,
+        formatter: (params: any) => {
+          if (params.dataType === 'node') {
+            return `<div style="padding: 4px 0;">
+              <strong>${params.name}</strong>
+              <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+                Click to expand details
+              </div>
+            </div>`;
+          }
+          return `${params.data.source} → ${params.data.target}<br/>Value: ${params.data.value}`;
+        },
       },
-    ],
-  };
+      series: [
+        {
+          type: 'sankey',
+          layout: 'none',
+          emphasis: {
+            focus: 'adjacency',
+          },
+          nodeAlign: nodeAlign,
+          lineStyle: {
+            color: 'gradient',
+            curveness: 0.5,
+            opacity: linkOpacity,
+          },
+          nodeWidth: 20,
+          nodeGap: 14,
+          label: {
+            fontFamily: 'Inter, system-ui, sans-serif',
+            fontSize: 12,
+            fontWeight: 500,
+            color: 'hsl(220, 25%, 10%)',
+          },
+          data: themedNodes,
+          links: chartData.links,
+        },
+      ],
+    };
 
-  const handleChartReady = useCallback((chart: any) => {
-    chart.on('click', 'series.sankey', (params: any) => {
-      if (params.dataType === 'node' && onNodeClick) {
-        onNodeClick(params.name);
-      }
-    });
+    const handleChartReady = useCallback(
+      (chart: any) => {
+        chart.on('click', 'series.sankey', (params: any) => {
+          if (params.dataType === 'node' && onNodeClick) {
+            onNodeClick(params.name);
+          }
+        });
 
-    // Add cursor pointer on node hover
-    chart.on('mouseover', 'series.sankey', (params: any) => {
-      if (params.dataType === 'node') {
-        chart.getZr().setCursorStyle('pointer');
-      }
-    });
+        // Add cursor pointer on node hover
+        chart.on('mouseover', 'series.sankey', (params: any) => {
+          if (params.dataType === 'node') {
+            chart.getZr().setCursorStyle('pointer');
+          }
+        });
 
-    chart.on('mouseout', 'series.sankey', () => {
-      chart.getZr().setCursorStyle('default');
-    });
-  }, [onNodeClick]);
+        chart.on('mouseout', 'series.sankey', () => {
+          chart.getZr().setCursorStyle('default');
+        });
+      },
+      [onNodeClick]
+    );
 
-  return (
-    <div className={className}>
-      <ReactECharts
-        ref={chartRef}
-        option={option}
-        style={{ height: '100%', width: '100%', minHeight: '400px' }}
-        opts={{ renderer: 'svg' }}
-        notMerge={true}
-        lazyUpdate={true}
-        onChartReady={handleChartReady}
-      />
-    </div>
-  );
-};
+    return (
+      <div className={className}>
+        <ReactECharts
+          ref={chartRef}
+          option={option}
+          style={{ height: '100%', width: '100%', minHeight: '400px' }}
+          opts={{ renderer: 'svg' }}
+          notMerge={true}
+          lazyUpdate={true}
+          onChartReady={handleChartReady}
+        />
+      </div>
+    );
+  }
+);
+
+SankeyChart.displayName = 'SankeyChart';
 
 export default SankeyChart;
