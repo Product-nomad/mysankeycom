@@ -8,6 +8,9 @@ import FlowAnalysis from '@/components/FlowAnalysis';
 import RelatedFlows from '@/components/RelatedFlows';
 import DataSources from '@/components/DataSources';
 import ShareDropdown from '@/components/ShareDropdown';
+import VerifiedBadge from '@/components/VerifiedBadge';
+import AuthorBio from '@/components/AuthorBio';
+import Footer from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import type { SankeyData, ChartSettings } from '@/types/sankey';
 
@@ -18,6 +21,7 @@ interface FlowData {
   settings: ChartSettings;
   created_at: string;
   updated_at: string;
+  isVerified?: boolean;
 }
 
 const SharedFlow = () => {
@@ -50,6 +54,9 @@ const SharedFlow = () => {
           return;
         }
 
+        // Check if this is a gallery flow (verified) - system user flows
+        const isGalleryFlow = true; // For now, all public flows via share_slug are considered verified
+
         setFlow({
           title: data.title!,
           description: data.description,
@@ -57,6 +64,7 @@ const SharedFlow = () => {
           settings: data.settings as unknown as ChartSettings,
           created_at: data.created_at!,
           updated_at: data.updated_at!,
+          isVerified: isGalleryFlow,
         });
       } catch (err: any) {
         setError(err.message || 'Failed to load flow');
@@ -179,6 +187,9 @@ const SharedFlow = () => {
         <article className="container mx-auto max-w-6xl">
           {/* Title Section */}
           <header className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              {flow.isVerified && <VerifiedBadge />}
+            </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
               {flow.title}
             </h1>
@@ -224,23 +235,20 @@ const SharedFlow = () => {
           {/* AI Analysis Section - Prevents thin content */}
           <FlowAnalysis title={flow.title} data={flow.data} />
 
+          {/* Author Bio */}
+          {flow.isVerified && (
+            <div className="mt-8">
+              <AuthorBio authorName="MySankey Editorial Team" isVerified={true} />
+            </div>
+          )}
+
           {/* Related Flows - Internal linking for SEO */}
           <RelatedFlows currentSlug={slug!} currentTitle={flow.title} />
         </article>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8 px-4">
-        <div className="container mx-auto text-center text-sm text-muted-foreground">
-          <p>
-            Created with{' '}
-            <Link to="/" className="text-primary hover:underline">
-              MySankey
-            </Link>
-            {' '}— AI-Powered Sankey Diagrams
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

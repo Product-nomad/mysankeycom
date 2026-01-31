@@ -1,12 +1,12 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import SearchBar from '@/components/SearchBar';
 import FeatureCard from '@/components/FeatureCard';
 import SankeyChart from '@/components/SankeyChart';
 import FlowActions from '@/components/FlowActions';
 import DiagramChat from '@/components/DiagramChat';
-
 import DataUpload from '@/components/DataUpload';
 import DataSources from '@/components/DataSources';
 import MobileFlowView from '@/components/MobileFlowView';
@@ -235,13 +235,7 @@ const Index = () => {
         </section>
 
         {/* Footer */}
-        <footer className="py-6 px-4 border-t border-border/30">
-          <div className="container mx-auto text-center text-muted-foreground">
-            <p className="text-xs">
-              © 2025 MySankey. Built with ❤️ for data visualization enthusiasts.
-            </p>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </div>
   );
