@@ -59,6 +59,13 @@ const CookieConsent = () => {
     }
   }, []);
 
+  // Listen for preference center open requests from footer
+  useEffect(() => {
+    const handler = () => setShowPreferences(true);
+    window.addEventListener('openCookiePreferences', handler);
+    return () => window.removeEventListener('openCookiePreferences', handler);
+  }, []);
+
   const savePreferences = (prefs: ConsentPreferences) => {
     localStorage.setItem(CONSENT_KEY, 'true');
     localStorage.setItem(PREFERENCES_KEY, JSON.stringify(prefs));
