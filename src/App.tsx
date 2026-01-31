@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import SharedFlow from "./pages/SharedFlow";
 import Explore from "./pages/Explore";
+import MyFlows from "./pages/MyFlows";
 import AdminSeed from "./pages/AdminSeed";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -34,6 +35,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/explore" element={<Explore />} />
+                <Route path="/my-flows" element={<MyFlows />} />
                 <Route path="/flow/:slug" element={<SharedFlow />} />
                 <Route path="/admin/seed" element={<AdminSeed />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
