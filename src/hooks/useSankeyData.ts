@@ -97,8 +97,9 @@ export const useSankeyData = () => {
   };
 
   const drillDown = async (nodeName: string) => {
-    if (!data || !originalQuery) {
-      toast.error('No active diagram to drill down from');
+    // If no data loaded yet (demo mode), start a new search for the clicked node
+    if (!originalQuery) {
+      await generateSankeyData(nodeName);
       return;
     }
 

@@ -178,7 +178,7 @@ const Index = () => {
                   <p className="text-xs text-muted-foreground">This may take a few seconds</p>
                 </div>
               </div>}
-            <SankeyChart ref={chartRef} className="w-full h-[350px] sm:h-[400px] md:h-[450px] min-w-[320px]" data={data} onNodeClick={data ? drillDown : undefined} settings={settings} />
+            <SankeyChart ref={chartRef} className="w-full h-[350px] sm:h-[400px] md:h-[450px] min-w-[320px]" data={data} onNodeClick={drillDown} settings={settings} />
           </div>
         </div>
       </section>
