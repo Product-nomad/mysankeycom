@@ -7,18 +7,27 @@ export interface SankeyLink {
   source: string;
   target: string;
   value: number;
+  confidence?: 'verified' | 'estimated' | 'projected';
+}
+
+export interface DataSource {
+  name: string;
+  url: string | null;
+  type: 'official' | 'industry' | 'research' | 'estimate';
 }
 
 export interface SankeyData {
   nodes: SankeyNode[];
   links: SankeyLink[];
   unit?: string;
+  sources?: DataSource[];
 }
 
 export interface ChartSettings {
-  theme: 'default' | 'corporate' | 'energy' | 'sunset';
+  theme: 'default' | 'corporate' | 'energy' | 'sunset' | 'glassmorphic';
   nodeAlign: 'left' | 'right' | 'justify';
   linkOpacity: number;
+  showConfidence?: boolean;
 }
 
 export interface BreadcrumbItem {
@@ -58,5 +67,9 @@ export const COLOR_THEMES = {
   sunset: [
     '#dc2626', '#ea580c', '#f59e0b', '#eab308', '#f97316', '#fb923c',
     '#fbbf24', '#facc15', '#ef4444', '#f87171', '#fca5a5', '#fed7aa',
+  ],
+  glassmorphic: [
+    '#60a5fa', '#34d399', '#a78bfa', '#fbbf24', '#f87171', '#22d3ee',
+    '#f472b6', '#a3e635', '#fb923c', '#818cf8', '#2dd4bf', '#c084fc',
   ],
 };

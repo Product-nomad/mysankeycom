@@ -7,6 +7,18 @@ const corsHeaders = {
 };
 
 const getSystemPrompt = (isDrillDown: boolean, originalQuery?: string, clickedNodeName?: string) => {
+  const confidenceInstructions = `
+IMPORTANT: For each link, include a "confidence" field with one of these values:
+- "verified" - Data from official sources, financial reports, government statistics
+- "estimated" - Calculated from partial data or industry benchmarks  
+- "projected" - AI-generated estimates based on patterns and trends
+
+Also include a "sources" array at the root level with objects containing:
+- "name": Source name (e.g., "Annual Report 2024", "IEA World Energy Outlook")
+- "url": URL if available, or null
+- "type": "official" | "industry" | "research" | "estimate"
+`;
+
   if (isDrillDown && originalQuery && clickedNodeName) {
     return `You are a data expert. The user is drilling down into a specific part of a flow.
 
@@ -21,7 +33,8 @@ Format:
 {
   "unit": "USD",
   "nodes": [{"name": "Node A"}, {"name": "Node B"}],
-  "links": [{"source": "Node A", "target": "Node B", "value": 100}]
+  "links": [{"source": "Node A", "target": "Node B", "value": 100, "confidence": "verified"}],
+  "sources": [{"name": "Source Name", "url": "https://...", "type": "official"}]
 }
 
 Rules:
@@ -29,11 +42,15 @@ Rules:
 2. Show how "${clickedNodeName}" breaks down into sub-components, processes, or destinations
 3. Ensure all source and target names in links exactly match node names
 4. Every link MUST include a "value" representing a realistic number based on the context
-5. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
-6. Create a logical flow from inputs through "${clickedNodeName}" to outputs
-7. Node names should be concise but descriptive
-8. Values should be proportional and add up logically
-9. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
+5. Every link MUST include a "confidence" field (verified, estimated, or projected)
+6. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
+7. Include a top-level "sources" array with 2-5 relevant data sources
+8. Create a logical flow from inputs through "${clickedNodeName}" to outputs
+9. Node names should be concise but descriptive
+10. Values should be proportional and add up logically
+11. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
+
+${confidenceInstructions}
 
 Focus on accuracy and creating an insightful drill-down view of "${clickedNodeName}".`;
   }
@@ -46,18 +63,23 @@ Format:
 {
   "unit": "B USD",
   "nodes": [{"name": "Node A"}, {"name": "Node B"}],
-  "links": [{"source": "Node A", "target": "Node B", "value": 100}]
+  "links": [{"source": "Node A", "target": "Node B", "value": 100, "confidence": "verified"}],
+  "sources": [{"name": "Source Name", "url": "https://...", "type": "official"}]
 }
 
 Rules:
 1. Create at least 15-20 links for a detailed breakdown
 2. Ensure all source and target names in links exactly match node names
 3. Every link MUST include a "value" representing a realistic number based on the context
-4. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
-5. Create a logical flow from sources to intermediates to destinations
-6. Node names should be concise but descriptive
-7. Values should be proportional and add up logically
-8. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
+4. Every link MUST include a "confidence" field (verified, estimated, or projected)
+5. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
+6. Include a top-level "sources" array with 2-5 relevant data sources
+7. Create a logical flow from sources to intermediates to destinations
+8. Node names should be concise but descriptive
+9. Values should be proportional and add up logically
+10. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
+
+${confidenceInstructions}
 
 Focus on accuracy and creating an insightful, informative diagram.`;
 };
@@ -211,6 +233,19 @@ serve(async (req) => {
         { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Ensure sources array exists (fallback if AI doesn't provide it)
+    if (!sankeyData.sources || !Array.isArray(sankeyData.sources)) {
+      sankeyData.sources = [
+        { name: "AI Generated Estimate", url: null, type: "estimate" }
+      ];
+    }
+
+    // Ensure all links have confidence (fallback to 'projected')
+    sankeyData.links = sankeyData.links.map((link: any) => ({
+      ...link,
+      confidence: link.confidence || 'projected'
+    }));
 
     console.log(`Generated ${sankeyData.nodes.length} nodes and ${sankeyData.links.length} links for user ${userId}`);
 
