@@ -5,7 +5,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const systemPrompt = `You are a data expert. The user will provide a topic (company, country, or concept). Generate a detailed Sankey diagram data structure in JSON format.
+const getSystemPrompt = (isDrillDown: boolean, originalQuery?: string, clickedNodeName?: string) => {
+  if (isDrillDown && originalQuery && clickedNodeName) {
+    return `You are a data expert. The user is drilling down into a specific part of a flow.
+
+Original topic: ${originalQuery}
+Specific node to expand: ${clickedNodeName}
+
+Provide a detailed sub-flow for this specific node "${clickedNodeName}" showing its internal breakdown and relationships.
+
+CRITICAL: Return ONLY valid JSON with no markdown, no code blocks, no explanation. Just the raw JSON object.
+
+Format:
+{
+  "nodes": [{"name": "Node A"}, {"name": "Node B"}],
+  "links": [{"source": "Node A", "target": "Node B", "value": 100}]
+}
+
+Rules:
+1. Create at least 12-18 links showing the internal breakdown of "${clickedNodeName}"
+2. Show how "${clickedNodeName}" breaks down into sub-components, processes, or destinations
+3. Ensure all source and target names in links exactly match node names
+4. Use realistic, researched values that make sense
+5. Create a logical flow from inputs through "${clickedNodeName}" to outputs
+6. Node names should be concise but descriptive
+7. Values should be proportional and add up logically
+
+Focus on accuracy and creating an insightful drill-down view of "${clickedNodeName}".`;
+  }
+
+  return `You are a data expert. The user will provide a topic (company, country, or concept). Generate a detailed Sankey diagram data structure in JSON format.
 
 CRITICAL: Return ONLY valid JSON with no markdown, no code blocks, no explanation. Just the raw JSON object.
 
@@ -24,17 +53,20 @@ Rules:
 6. Values should be proportional and add up logically
 
 Focus on accuracy and creating an insightful, informative diagram.`;
+};
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { query } = await req.json();
+    const { query, originalQuery, clickedNodeName } = await req.json();
     
-    if (!query || typeof query !== 'string') {
+    const searchQuery = query || originalQuery;
+    const isDrillDown = !!(originalQuery && clickedNodeName);
+    
+    if (!searchQuery || typeof searchQuery !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Query is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -50,7 +82,12 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Generating Sankey data for query: ${query}`);
+    const systemPrompt = getSystemPrompt(isDrillDown, originalQuery, clickedNodeName);
+    const userMessage = isDrillDown 
+      ? `Drill down into "${clickedNodeName}" from the topic "${originalQuery}". Show detailed sub-flows.`
+      : `Generate a detailed Sankey diagram for: ${searchQuery}`;
+
+    console.log(`Generating Sankey data - Query: ${searchQuery}, DrillDown: ${isDrillDown}, Node: ${clickedNodeName || 'N/A'}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -62,7 +99,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Generate a detailed Sankey diagram for: ${query}` },
+          { role: "user", content: userMessage },
         ],
       }),
     });
@@ -99,10 +136,8 @@ serve(async (req) => {
       );
     }
 
-    // Parse the JSON from the AI response
     let sankeyData;
     try {
-      // Remove any markdown code blocks if present
       let cleanContent = content.trim();
       if (cleanContent.startsWith('```json')) {
         cleanContent = cleanContent.slice(7);
@@ -123,7 +158,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate the structure
     if (!sankeyData.nodes || !Array.isArray(sankeyData.nodes) || 
         !sankeyData.links || !Array.isArray(sankeyData.links)) {
       console.error("Invalid Sankey data structure:", sankeyData);
