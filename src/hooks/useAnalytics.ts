@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { getConsentPreferences, hasConsented } from '@/components/CookieConsent';
 
 // Replace with your GA4 Measurement ID
-const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX';
+const GA_MEASUREMENT_ID = 'G-VVZL9F0KXB';
 
 declare global {
   interface Window {
