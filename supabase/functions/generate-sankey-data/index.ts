@@ -67,7 +67,7 @@ ${confidenceInstructions}
 Focus on accuracy and creating an insightful drill-down view of "${clickedNodeName}".`;
   }
 
-  return `You are a data expert. The user will provide a topic (company, country, or concept). Generate a detailed Sankey diagram data structure in JSON format.
+  return `You are a data expert specializing in flow visualization. The user will provide a topic (company, country, or concept). Generate a detailed Sankey diagram data structure in JSON format.
 
 Current year: ${currentYear}
 
@@ -81,6 +81,16 @@ Format:
   "sources": [{"name": "Source Name ${currentYear}", "url": "https://real-url.com/path", "type": "official"}]
 }
 
+SEMANTIC COHERENCE RULES (CRITICAL):
+- Every node must be DIRECTLY relevant to the specific topic
+- Group nodes into clear CATEGORIES that make logical sense together:
+  * For ENERGY flows: Sources (Coal, Gas, Oil, Nuclear, Renewables) → Conversion (Power Plants, Refineries) → End Uses (Industry, Transport, Residential)
+  * For FINANCIAL flows: Revenue Sources → Business Segments → Cost Categories → Profit/Loss
+  * For SUPPLY CHAIN flows: Raw Materials → Manufacturing → Distribution → End Markets
+  * For BUDGET flows: Income Sources → Departments/Programs → Expenditure Types
+- NEVER mix unrelated categories (e.g., don't put "Wind Power" in a "Supply Chain" category unless it's specifically about wind turbine supply chains)
+- Each link should represent a logical transformation or distribution of the flow
+
 Rules:
 1. Create at least 15-20 links for a detailed breakdown
 2. Ensure all source and target names in links exactly match node names
@@ -88,15 +98,15 @@ Rules:
 4. Every link MUST include a "confidence" field (verified, estimated, or projected)
 5. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
 6. Include a top-level "sources" array with 2-5 relevant data sources with REAL, WORKING URLs
-7. Create a logical flow from sources to intermediates to destinations
-8. Node names should be concise but descriptive
-9. Values should be proportional and add up logically
+7. Create a logical LEFT-TO-RIGHT flow: Primary Sources → Intermediate Processing → Final Destinations
+8. Node names should be concise but descriptive (max 25 characters)
+9. Values should be proportional and MUST add up logically (inputs ≈ outputs for each stage)
 10. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
 11. Use the MOST RECENT available data (${currentYear} or ${currentYear - 1})
 
 ${confidenceInstructions}
 
-Focus on accuracy and creating an insightful, informative diagram.`;
+Focus on accuracy, logical coherence, and creating an insightful diagram where every node clearly belongs to the topic.`;
 };
 
 serve(async (req) => {
