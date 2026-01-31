@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Save, Share2, Download, Copy, Image, FileCode, Check, Loader2, LogIn } from 'lucide-react';
+import ShareDropdown from '@/components/ShareDropdown';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -295,7 +296,8 @@ const FlowActions = ({ data, currentQuery, breadcrumbs, settings, chartRef }: Fl
         </Dialog>
       ) : null}
 
-      {/* Export Dropdown */}
+      {/* Social Share Dropdown */}
+      <ShareDropdown title={`Sankey Diagram: ${currentQuery}`} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm">
