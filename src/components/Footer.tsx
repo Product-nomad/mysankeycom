@@ -76,11 +76,11 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="mailto:hello@mysankey.com"
+                  href="mailto:feedback@mysankey.com"
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 >
                   <Mail className="w-3 h-3" />
-                  hello@mysankey.com
+                  feedback@mysankey.com
                 </a>
               </li>
             </ul>
