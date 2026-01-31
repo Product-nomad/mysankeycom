@@ -19,6 +19,7 @@ CRITICAL: Return ONLY valid JSON with no markdown, no code blocks, no explanatio
 
 Format:
 {
+  "unit": "USD",
   "nodes": [{"name": "Node A"}, {"name": "Node B"}],
   "links": [{"source": "Node A", "target": "Node B", "value": 100}]
 }
@@ -27,10 +28,12 @@ Rules:
 1. Create at least 12-18 links showing the internal breakdown of "${clickedNodeName}"
 2. Show how "${clickedNodeName}" breaks down into sub-components, processes, or destinations
 3. Ensure all source and target names in links exactly match node names
-4. Use realistic, researched values that make sense
-5. Create a logical flow from inputs through "${clickedNodeName}" to outputs
-6. Node names should be concise but descriptive
-7. Values should be proportional and add up logically
+4. Every link MUST include a "value" representing a realistic number based on the context
+5. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
+6. Create a logical flow from inputs through "${clickedNodeName}" to outputs
+7. Node names should be concise but descriptive
+8. Values should be proportional and add up logically
+9. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
 
 Focus on accuracy and creating an insightful drill-down view of "${clickedNodeName}".`;
   }
@@ -41,6 +44,7 @@ CRITICAL: Return ONLY valid JSON with no markdown, no code blocks, no explanatio
 
 Format:
 {
+  "unit": "B USD",
   "nodes": [{"name": "Node A"}, {"name": "Node B"}],
   "links": [{"source": "Node A", "target": "Node B", "value": 100}]
 }
@@ -48,10 +52,12 @@ Format:
 Rules:
 1. Create at least 15-20 links for a detailed breakdown
 2. Ensure all source and target names in links exactly match node names
-3. Use realistic, researched values that make sense for the topic
-4. Create a logical flow from sources to intermediates to destinations
-5. Node names should be concise but descriptive
-6. Values should be proportional and add up logically
+3. Every link MUST include a "value" representing a realistic number based on the context
+4. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
+5. Create a logical flow from sources to intermediates to destinations
+6. Node names should be concise but descriptive
+7. Values should be proportional and add up logically
+8. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
 
 Focus on accuracy and creating an insightful, informative diagram.`;
 };
