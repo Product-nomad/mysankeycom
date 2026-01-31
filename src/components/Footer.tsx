@@ -58,15 +58,6 @@ const Footer = () => {
                   Cookie Policy
                 </Link>
               </li>
-              <li>
-                <button
-                  onClick={openCookiePreferences}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                >
-                  <Cookie className="w-3 h-3" />
-                  Cookie Settings
-                </button>
-              </li>
             </ul>
           </div>
 
@@ -92,9 +83,19 @@ const Footer = () => {
           <p className="text-xs text-muted-foreground">
             © {currentYear} MySankey. Built with ❤️ for data visualization enthusiasts.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Data visualizations are AI-generated. Always verify with primary sources.
-          </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={openCookiePreferences}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <Cookie className="w-3 h-3" />
+              Cookie Settings
+            </button>
+            <span className="text-xs text-muted-foreground">•</span>
+            <p className="text-xs text-muted-foreground">
+              AI-generated visualizations. Verify with primary sources.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
