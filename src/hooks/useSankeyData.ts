@@ -1,23 +1,9 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { SankeyData, SankeyNode, SankeyLink, DataSource } from '@/types/sankey';
 
-interface SankeyNode {
-  name: string;
-  itemStyle?: { color: string };
-}
-
-interface SankeyLink {
-  source: string;
-  target: string;
-  value: number;
-}
-
-export interface SankeyData {
-  nodes: SankeyNode[];
-  links: SankeyLink[];
-  unit?: string;
-}
+export type { SankeyData, SankeyNode, SankeyLink, DataSource };
 
 export interface HistoryEntry {
   data: SankeyData;
@@ -82,6 +68,7 @@ export const useSankeyData = () => {
         nodes: nodesWithColors,
         links: responseData.links,
         unit: responseData.unit,
+        sources: responseData.sources,
       };
 
       setData(newData);
@@ -96,6 +83,20 @@ export const useSankeyData = () => {
     }
   };
 
+  const setDataFromUpload = useCallback((uploadedData: SankeyData) => {
+    const nodesWithColors = addColorsToNodes(uploadedData.nodes);
+    const newData: SankeyData = {
+      ...uploadedData,
+      nodes: nodesWithColors,
+    };
+    setData(newData);
+    setCurrentQuery('Uploaded Data');
+    setOriginalQuery('Uploaded Data');
+    setHistory([]);
+    setBreadcrumbs(['Home']);
+    toast.success('Data imported successfully');
+  }, [addColorsToNodes]);
+
   const drillDown = async (nodeName: string) => {
     // If no data loaded yet (demo mode), start a new search for the clicked node
     if (!originalQuery) {
@@ -108,7 +109,7 @@ export const useSankeyData = () => {
 
     // Save current state to history
     const historyEntry: HistoryEntry = {
-      data: data,
+      data: data!,
       label: breadcrumbs[breadcrumbs.length - 1] || 'Home',
       query: currentQuery,
     };
@@ -140,6 +141,7 @@ export const useSankeyData = () => {
         nodes: nodesWithColors,
         links: responseData.links,
         unit: responseData.unit,
+        sources: responseData.sources,
       };
 
       setData(newData);
@@ -205,6 +207,7 @@ export const useSankeyData = () => {
     breadcrumbs,
     canGoBack,
     generateSankeyData,
+    setDataFromUpload,
     drillDown,
     goBack,
     goToBreadcrumb,

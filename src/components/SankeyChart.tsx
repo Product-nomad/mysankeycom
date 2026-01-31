@@ -1,8 +1,7 @@
 import { useCallback, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { useTheme } from 'next-themes';
-import type { SankeyData } from '@/hooks/useSankeyData';
-import type { ChartSettings } from '@/types/sankey';
+import type { SankeyData, ChartSettings } from '@/types/sankey';
 import { COLOR_THEMES } from '@/types/sankey';
 
 interface SankeyChartProps {
@@ -15,40 +14,36 @@ interface SankeyChartProps {
 // Default sample data with unit for demo purposes
 const defaultData: SankeyData = {
   nodes: [
-    { name: 'Solar', itemStyle: { color: '#f59e0b' } },
-    { name: 'Wind', itemStyle: { color: '#10b981' } },
-    { name: 'Hydro', itemStyle: { color: '#3b82f6' } },
-    { name: 'Nuclear', itemStyle: { color: '#8b5cf6' } },
-    { name: 'Coal', itemStyle: { color: '#6b7280' } },
-    { name: 'Natural Gas', itemStyle: { color: '#f97316' } },
-    { name: 'Electricity Grid', itemStyle: { color: '#0ea5e9' } },
-    { name: 'Industrial', itemStyle: { color: '#64748b' } },
-    { name: 'Residential', itemStyle: { color: '#14b8a6' } },
-    { name: 'Commercial', itemStyle: { color: '#a855f7' } },
-    { name: 'Transportation', itemStyle: { color: '#ec4899' } },
-    { name: 'Manufacturing', itemStyle: { color: '#f43f5e' } },
-    { name: 'Heating', itemStyle: { color: '#ef4444' } },
-    { name: 'Cooling', itemStyle: { color: '#06b6d4' } },
+    { name: 'Solar' }, { name: 'Wind' }, { name: 'Hydro' }, { name: 'Nuclear' },
+    { name: 'Coal' }, { name: 'Natural Gas' }, { name: 'Electricity Grid' },
+    { name: 'Industrial' }, { name: 'Residential' }, { name: 'Commercial' },
+    { name: 'Transportation' }, { name: 'Manufacturing' }, { name: 'Heating' }, { name: 'Cooling' },
   ],
   links: [
-    { source: 'Solar', target: 'Electricity Grid', value: 25 },
-    { source: 'Wind', target: 'Electricity Grid', value: 35 },
-    { source: 'Hydro', target: 'Electricity Grid', value: 20 },
-    { source: 'Nuclear', target: 'Electricity Grid', value: 30 },
-    { source: 'Coal', target: 'Electricity Grid', value: 15 },
-    { source: 'Natural Gas', target: 'Electricity Grid', value: 25 },
-    { source: 'Electricity Grid', target: 'Industrial', value: 45 },
-    { source: 'Electricity Grid', target: 'Residential', value: 35 },
-    { source: 'Electricity Grid', target: 'Commercial', value: 30 },
-    { source: 'Electricity Grid', target: 'Transportation', value: 20 },
-    { source: 'Industrial', target: 'Manufacturing', value: 30 },
-    { source: 'Industrial', target: 'Heating', value: 15 },
-    { source: 'Residential', target: 'Heating', value: 20 },
-    { source: 'Residential', target: 'Cooling', value: 15 },
-    { source: 'Commercial', target: 'Cooling', value: 18 },
-    { source: 'Commercial', target: 'Heating', value: 12 },
+    { source: 'Solar', target: 'Electricity Grid', value: 25, confidence: 'verified' },
+    { source: 'Wind', target: 'Electricity Grid', value: 35, confidence: 'verified' },
+    { source: 'Hydro', target: 'Electricity Grid', value: 20, confidence: 'verified' },
+    { source: 'Nuclear', target: 'Electricity Grid', value: 30, confidence: 'verified' },
+    { source: 'Coal', target: 'Electricity Grid', value: 15, confidence: 'estimated' },
+    { source: 'Natural Gas', target: 'Electricity Grid', value: 25, confidence: 'estimated' },
+    { source: 'Electricity Grid', target: 'Industrial', value: 45, confidence: 'projected' },
+    { source: 'Electricity Grid', target: 'Residential', value: 35, confidence: 'projected' },
+    { source: 'Electricity Grid', target: 'Commercial', value: 30, confidence: 'projected' },
+    { source: 'Electricity Grid', target: 'Transportation', value: 20, confidence: 'projected' },
+    { source: 'Industrial', target: 'Manufacturing', value: 30, confidence: 'estimated' },
+    { source: 'Industrial', target: 'Heating', value: 15, confidence: 'estimated' },
+    { source: 'Residential', target: 'Heating', value: 20, confidence: 'projected' },
+    { source: 'Residential', target: 'Cooling', value: 15, confidence: 'projected' },
+    { source: 'Commercial', target: 'Cooling', value: 18, confidence: 'projected' },
+    { source: 'Commercial', target: 'Heating', value: 12, confidence: 'projected' },
   ],
-  unit: 'GW', // Add unit for demo values
+  unit: 'GW',
+};
+
+const confidenceColors = {
+  verified: '#10b981',
+  estimated: '#f59e0b',
+  projected: '#a855f7',
 };
 
 const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
@@ -59,21 +54,18 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
     const chartData = data || defaultData;
     const isDark = resolvedTheme === 'dark';
     const unit = chartData.unit || '';
+    const showConfidence = settings?.showConfidence ?? false;
 
-    // Keep the ref updated with the latest callback
     useEffect(() => {
       onNodeClickRef.current = onNodeClick;
     }, [onNodeClick]);
 
-    // Forward the ref so parent can access chart instance
     useImperativeHandle(ref, () => chartRef.current as ReactECharts);
 
-    // Calculate node totals (sum of incoming or outgoing values)
+    // Calculate node totals
     const nodeTotals = new Map<string, number>();
     chartData.links.forEach(link => {
-      // Add to target node (incoming)
       nodeTotals.set(link.target, (nodeTotals.get(link.target) || 0) + link.value);
-      // For source nodes without incoming links, use outgoing
       if (!nodeTotals.has(link.source)) {
         const outgoing = chartData.links
           .filter(l => l.source === link.source)
@@ -82,23 +74,24 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
       }
     });
 
-    // Format value with unit - only show if unit exists
     const formatValue = (value: number, unitStr: string) => {
-      if (!unitStr) return null; // Don't format without a unit
-      
-      if (value >= 1000000000) {
-        return `${(value / 1000000000).toFixed(1)}B ${unitStr}`;
-      }
-      if (value >= 1000000) {
-        return `${(value / 1000000).toFixed(1)}M ${unitStr}`;
-      }
-      if (value >= 1000) {
-        return `${(value / 1000).toFixed(1)}K ${unitStr}`;
-      }
+      if (!unitStr) return null;
+      if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B ${unitStr}`;
+      if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M ${unitStr}`;
+      if (value >= 1000) return `${(value / 1000).toFixed(1)}K ${unitStr}`;
       return `${value.toLocaleString()} ${unitStr}`;
     };
 
-    // Apply theme colors to nodes
+    const getConfidenceLabel = (conf?: string) => {
+      switch (conf) {
+        case 'verified': return '✓ Verified';
+        case 'estimated': return '≈ Estimated';
+        case 'projected': return '✧ Projected';
+        default: return '';
+      }
+    };
+
+    // Apply theme colors
     const themedNodes = chartData.nodes.map((node, index) => {
       const themeColors = settings?.theme ? COLOR_THEMES[settings.theme] : COLOR_THEMES.default;
       return {
@@ -107,18 +100,28 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
       };
     });
 
+    // Apply confidence-based link colors if enabled
+    const themedLinks = chartData.links.map((link) => {
+      if (showConfidence && link.confidence) {
+        return {
+          ...link,
+          lineStyle: {
+            color: confidenceColors[link.confidence],
+            opacity: settings?.linkOpacity ?? 0.5,
+          },
+        };
+      }
+      return link;
+    });
+
     const nodeAlign = settings?.nodeAlign || 'justify';
     const linkOpacity = settings?.linkOpacity ?? 0.5;
 
-    // Theme-aware colors
-    const tooltipBg = isDark ? 'hsl(220, 25%, 12%)' : 'hsl(0, 0%, 100%)';
-    const tooltipBorder = isDark ? 'hsl(220, 20%, 20%)' : 'hsl(210, 20%, 90%)';
+    // Theme-aware colors for glassmorphic look
+    const tooltipBg = isDark ? 'hsl(222, 47%, 10%)' : 'hsl(0, 0%, 100%)';
+    const tooltipBorder = isDark ? 'hsl(222, 30%, 25%)' : 'hsl(210, 20%, 90%)';
     const tooltipText = isDark ? 'hsl(210, 20%, 98%)' : 'hsl(220, 25%, 10%)';
     const labelColor = isDark ? 'hsl(210, 20%, 90%)' : 'hsl(220, 25%, 10%)';
-
-    // Calculate dynamic node gap based on number of nodes
-    const nodeCount = chartData.nodes.length;
-    const dynamicNodeGap = Math.max(8, Math.min(20, 180 / nodeCount));
 
     const option = {
       tooltip: {
@@ -146,9 +149,14 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
             </div>`;
           }
           const formattedValue = formatValue(params.data.value, unit);
+          const confidence = params.data.confidence;
+          const confLabel = showConfidence ? getConfidenceLabel(confidence) : '';
+          const confColor = confidence ? confidenceColors[confidence as keyof typeof confidenceColors] : '';
+          
           return `<div style="padding: 2px 0;">
             <strong style="font-size: 14px;">${params.data.source} → ${params.data.target}</strong>
             ${formattedValue ? `<div style="font-size: 13px; margin-top: 6px; opacity: 0.9;">${formattedValue}</div>` : ''}
+            ${confLabel ? `<div style="font-size: 11px; color: ${confColor}; margin-top: 4px;">${confLabel}</div>` : ''}
           </div>`;
         },
       },
@@ -156,12 +164,10 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
         {
           type: 'sankey',
           layoutIterations: 64,
-          emphasis: {
-            focus: 'adjacency',
-          },
-          nodeAlign: nodeAlign,
+          emphasis: { focus: 'adjacency' },
+          nodeAlign,
           lineStyle: {
-            color: 'gradient',
+            color: showConfidence ? 'source' : 'gradient',
             curveness: 0.5,
             opacity: linkOpacity,
           },
@@ -182,7 +188,6 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
             ellipsis: '...',
             width: 90,
             formatter: (params: any) => {
-              // Only show name, values shown on hover via tooltip
               if (params.name.length > 14) {
                 return params.name.substring(0, 12) + '...';
               }
@@ -190,32 +195,28 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
             },
           },
           data: themedNodes,
-          links: chartData.links,
+          links: themedLinks,
         },
       ],
     };
 
-    const handleChartReady = useCallback(
-      (chart: any) => {
-        chart.on('click', 'series.sankey', (params: any) => {
-          if (params.dataType === 'node' && onNodeClickRef.current) {
-            onNodeClickRef.current(params.name);
-          }
-        });
+    const handleChartReady = useCallback((chart: any) => {
+      chart.on('click', 'series.sankey', (params: any) => {
+        if (params.dataType === 'node' && onNodeClickRef.current) {
+          onNodeClickRef.current(params.name);
+        }
+      });
 
-        // Add cursor pointer on node hover
-        chart.on('mouseover', 'series.sankey', (params: any) => {
-          if (params.dataType === 'node') {
-            chart.getZr().setCursorStyle('pointer');
-          }
-        });
+      chart.on('mouseover', 'series.sankey', (params: any) => {
+        if (params.dataType === 'node') {
+          chart.getZr().setCursorStyle('pointer');
+        }
+      });
 
-        chart.on('mouseout', 'series.sankey', () => {
-          chart.getZr().setCursorStyle('default');
-        });
-      },
-      []
-    );
+      chart.on('mouseout', 'series.sankey', () => {
+        chart.getZr().setCursorStyle('default');
+      });
+    }, []);
 
     return (
       <div className={className}>
