@@ -6,7 +6,7 @@ import FeatureCard from '@/components/FeatureCard';
 import SankeyChart from '@/components/SankeyChart';
 import FlowActions from '@/components/FlowActions';
 import DiagramChat from '@/components/DiagramChat';
-import CommandCenter from '@/components/CommandCenter';
+
 import DataUpload from '@/components/DataUpload';
 import DataSources from '@/components/DataSources';
 import MobileFlowView from '@/components/MobileFlowView';
@@ -80,24 +80,11 @@ const Index = () => {
     clearData
   } = useSankeyData();
 
-  const historyForSidebar = useMemo(() => 
-    history.map(h => ({ label: h.label, query: h.query })),
-    [history]
-  );
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Command Center Sidebar */}
-      <CommandCenter
-        settings={settings}
-        onSettingsChange={setSettings}
-        history={historyForSidebar}
-        onHistorySelect={goToBreadcrumb}
-        onUploadClick={() => setIsUploadOpen(true)}
-      />
-
       {/* Data Upload Dialog */}
       <DataUpload
         isOpen={isUploadOpen}
@@ -105,8 +92,8 @@ const Index = () => {
         onDataReady={setDataFromUpload}
       />
 
-      {/* Main Content - offset for sidebar */}
-      <div className="ml-12 transition-all duration-300">
+      {/* Main Content */}
+      <div className="transition-all duration-300">
         {/* Hero Section */}
         <section className="pt-20 pb-8 px-4">
           <div className="container mx-auto text-center">
