@@ -174,9 +174,7 @@ const Index = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Featured Flows
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Start with our curated collection of popular Sankey diagrams or create your own from scratch.
-            </p>
+            
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
