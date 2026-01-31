@@ -154,15 +154,15 @@ export default function DiagramChat({ data, query }: DiagramChatProps) {
         onClick={() => setIsOpen(!isOpen)}
         size="sm"
         variant={isOpen ? 'default' : 'outline'}
-        className="fixed bottom-4 right-4 z-50 rounded-full h-12 w-12 p-0 shadow-lg"
+        className="absolute bottom-2 right-2 z-20 rounded-full h-10 w-10 p-0 shadow-lg"
       >
-        {isOpen ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+        {isOpen ? <X className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
       </Button>
 
       {/* Chat panel */}
       <div
         className={cn(
-          'fixed bottom-20 right-4 z-50 w-[360px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-xl shadow-xl transition-all duration-300',
+          'absolute bottom-14 right-2 z-20 w-[340px] max-w-[calc(100%-1rem)] bg-card border border-border rounded-xl shadow-xl transition-all duration-300',
           isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         )}
       >
