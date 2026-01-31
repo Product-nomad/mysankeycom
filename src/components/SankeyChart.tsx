@@ -154,7 +154,7 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
       series: [
         {
           type: 'sankey',
-          layoutIterations: 32,
+          layoutIterations: 64,
           emphasis: {
             focus: 'adjacency',
           },
@@ -164,30 +164,28 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
             curveness: 0.5,
             opacity: linkOpacity,
           },
-          nodeWidth: 14,
-          nodeGap: dynamicNodeGap,
-          left: '2%',
-          right: '18%',
-          top: '3%',
-          bottom: '3%',
+          nodeWidth: 12,
+          nodeGap: 8,
+          left: '1%',
+          right: '15%',
+          top: '2%',
+          bottom: '2%',
           label: {
+            show: true,
+            position: 'right',
             fontFamily: 'Inter, system-ui, sans-serif',
-            fontSize: 10,
+            fontSize: 9,
             fontWeight: 500,
             color: labelColor,
             overflow: 'truncate',
-            width: 100,
-            lineHeight: 14,
+            ellipsis: '...',
+            width: 90,
             formatter: (params: any) => {
-              const total = nodeTotals.get(params.name) || 0;
-              // Truncate long names
-              const displayName = params.name.length > 18 
-                ? params.name.substring(0, 16) + '...' 
-                : params.name;
-              if (total > 0 && unit) {
-                return `${displayName}\n${formatValue(total, unit)}`;
+              // Only show name, values shown on hover via tooltip
+              if (params.name.length > 14) {
+                return params.name.substring(0, 12) + '...';
               }
-              return displayName;
+              return params.name;
             },
           },
           data: themedNodes,
