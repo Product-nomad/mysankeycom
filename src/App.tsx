@@ -17,6 +17,7 @@ import Methodology from "./pages/Methodology";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import CookieConsent from "./components/CookieConsent";
+import AnalyticsProvider from "./components/AnalyticsProvider";
 
 const queryClient = new QueryClient();
 
@@ -28,21 +29,23 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/explore" element={<Explore />} />
-              <Route path="/flow/:slug" element={<SharedFlow />} />
-              <Route path="/admin/seed" element={<AdminSeed />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/cookie-policy" element={<CookiePolicy />} />
-              <Route path="/methodology" element={<Methodology />} />
-              <Route path="/settings" element={<Settings />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <CookieConsent />
+            <AnalyticsProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/flow/:slug" element={<SharedFlow />} />
+                <Route path="/admin/seed" element={<AdminSeed />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
+                <Route path="/methodology" element={<Methodology />} />
+                <Route path="/settings" element={<Settings />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <CookieConsent />
+            </AnalyticsProvider>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
