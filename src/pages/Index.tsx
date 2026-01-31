@@ -83,7 +83,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onUploadClick={() => setIsUploadOpen(true)} />
       
       {/* Data Upload Dialog */}
       <DataUpload

@@ -1,4 +1,4 @@
-import { GitBranch, LogOut, User } from 'lucide-react';
+import { GitBranch, LogOut, User, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +11,11 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import ThemeToggle from '@/components/ThemeToggle';
 
-const Header = () => {
+interface HeaderProps {
+  onUploadClick?: () => void;
+}
+
+const Header = ({ onUploadClick }: HeaderProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -39,6 +43,15 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onUploadClick}
+            className="btn-glass"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload CSV
+          </Button>
           <ThemeToggle />
           {user ? (
             <DropdownMenu>
