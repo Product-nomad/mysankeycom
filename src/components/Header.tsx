@@ -64,14 +64,9 @@ const Header = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <>
-              <Button variant="ghost" className="text-sm font-medium" onClick={() => navigate('/auth')}>
-                Sign In
-              </Button>
-              <Button className="gradient-hero text-primary-foreground text-sm font-medium" onClick={() => navigate('/auth')}>
-                Get Started
-              </Button>
-            </>
+            <Button variant="ghost" className="text-sm font-medium" onClick={() => navigate('/auth')}>
+              Sign In
+            </Button>
           )}
         </div>
       </div>
