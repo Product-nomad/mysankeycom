@@ -1,7 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
-
 interface FeatureCardProps {
   title: string;
   description: string;
@@ -9,13 +8,15 @@ interface FeatureCardProps {
   nodes: number;
   gradient?: string;
 }
-
-const FeatureCard = ({ title, description, category, nodes, gradient }: FeatureCardProps) => {
-  return (
-    <Card className="group cursor-pointer overflow-hidden border-border/50 bg-card shadow-card transition-all duration-300 hover:shadow-soft hover:-translate-y-1">
-      <div 
-        className={`h-32 ${gradient || 'gradient-hero'} opacity-90 group-hover:opacity-100 transition-opacity`}
-      />
+const FeatureCard = ({
+  title,
+  description,
+  category,
+  nodes,
+  gradient
+}: FeatureCardProps) => {
+  return <Card className="group cursor-pointer overflow-hidden border-border/50 bg-card shadow-card transition-all duration-300 hover:shadow-soft hover:-translate-y-1">
+      
       <CardContent className="p-5">
         <Badge variant="secondary" className="mb-3 text-xs font-medium">
           {category}
@@ -36,8 +37,6 @@ const FeatureCard = ({ title, description, category, nodes, gradient }: FeatureC
           </span>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default FeatureCard;
