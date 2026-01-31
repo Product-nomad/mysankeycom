@@ -14,9 +14,7 @@ const Header = () => {
           <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Features
           </a>
-          <a href="#examples" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Examples
-          </a>
+          
           
         </nav>
         
