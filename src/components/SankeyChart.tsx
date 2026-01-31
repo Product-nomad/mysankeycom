@@ -1,5 +1,6 @@
 import { useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { useTheme } from 'next-themes';
 import type { SankeyData } from '@/hooks/useSankeyData';
 import type { ChartSettings } from '@/types/sankey';
 import { COLOR_THEMES } from '@/types/sankey';
@@ -52,7 +53,9 @@ const defaultData: SankeyData = {
 const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
   ({ className, data, onNodeClick, settings }, ref) => {
     const chartRef = useRef<ReactECharts>(null);
+    const { resolvedTheme } = useTheme();
     const chartData = data || defaultData;
+    const isDark = resolvedTheme === 'dark';
 
     // Forward the ref so parent can access chart instance
     useImperativeHandle(ref, () => chartRef.current as ReactECharts);
@@ -69,21 +72,27 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
     const nodeAlign = settings?.nodeAlign || 'justify';
     const linkOpacity = settings?.linkOpacity ?? 0.5;
 
+    // Theme-aware colors
+    const tooltipBg = isDark ? 'hsl(220, 25%, 12%)' : 'hsl(0, 0%, 100%)';
+    const tooltipBorder = isDark ? 'hsl(220, 20%, 20%)' : 'hsl(210, 20%, 90%)';
+    const tooltipText = isDark ? 'hsl(210, 20%, 98%)' : 'hsl(220, 25%, 10%)';
+    const labelColor = isDark ? 'hsl(210, 20%, 90%)' : 'hsl(220, 25%, 10%)';
+
     const option = {
       tooltip: {
         trigger: 'item',
         triggerOn: 'mousemove',
-        backgroundColor: 'hsl(220, 25%, 10%)',
-        borderColor: 'hsl(220, 20%, 20%)',
+        backgroundColor: tooltipBg,
+        borderColor: tooltipBorder,
         textStyle: {
-          color: 'hsl(210, 20%, 98%)',
+          color: tooltipText,
           fontFamily: 'Inter, system-ui, sans-serif',
         },
         formatter: (params: any) => {
           if (params.dataType === 'node') {
             return `<div style="padding: 4px 0;">
               <strong>${params.name}</strong>
-              <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+              <div style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 4px;">
                 Click to expand details
               </div>
             </div>`;
@@ -114,7 +123,7 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
             fontFamily: 'Inter, system-ui, sans-serif',
             fontSize: 11,
             fontWeight: 500,
-            color: 'hsl(220, 25%, 10%)',
+            color: labelColor,
             overflow: 'truncate',
             width: 80,
           },

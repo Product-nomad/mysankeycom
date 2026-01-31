@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -37,7 +38,8 @@ const Header = () => {
           {/* Navigation links can be added here */}
         </nav>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
