@@ -1,5 +1,4 @@
-import { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useState, useCallback, useRef, DragEvent } from 'react';
 import Papa from 'papaparse';
 import { 
   Upload, FileSpreadsheet, Download, X, Check, AlertCircle, 
@@ -72,6 +71,8 @@ const DataUpload = ({ isOpen, onClose, onDataReady }: DataUploadProps) => {
   const [aiMapping, setAiMapping] = useState<AIMapping | null>(null);
   const [healthCheck, setHealthCheck] = useState<HealthCheck | null>(null);
   const [isCleaning, setIsCleaning] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetState = useCallback(() => {
     setStep('upload');
@@ -176,22 +177,43 @@ const DataUpload = ({ isOpen, onClose, onDataReady }: DataUploadProps) => {
     });
   }, [analyzeSchema]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+  }, []);
+
+  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const validTypes = ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+      const validExtensions = ['.csv', '.xlsx', '.xls'];
+      const hasValidExtension = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+      
+      if (validTypes.includes(file.type) || hasValidExtension) {
+        processFile(file);
+      } else {
+        setError('Please upload a CSV or Excel file');
+      }
+    }
+  }, [processFile]);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       processFile(file);
     }
   }, [processFile]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'text/csv': ['.csv'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'application/vnd.ms-excel': ['.xls']
-    },
-    maxFiles: 1
-  });
 
   const cleanData = useCallback(() => {
     if (!parsedData || !sourceColumn || !targetColumn) return;
@@ -408,7 +430,10 @@ const DataUpload = ({ isOpen, onClose, onDataReady }: DataUploadProps) => {
           {step === 'upload' && (
             <>
               <div
-                {...getRootProps()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
                 className={cn(
                   "border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer",
                   isDragActive 
@@ -416,7 +441,13 @@ const DataUpload = ({ isOpen, onClose, onDataReady }: DataUploadProps) => {
                     : "border-border/50 hover:border-primary/50"
                 )}
               >
-                <input {...getInputProps()} />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
                 <Upload className={cn(
                   "h-10 w-10 mx-auto mb-3 transition-colors",
                   isDragActive ? "text-primary" : "text-muted-foreground"
