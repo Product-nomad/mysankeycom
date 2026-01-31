@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Check, X, Loader2, RefreshCw, AlertTriangle, Clock, Eye } from 'lucide-react';
+import { Check, X, Loader2, RefreshCw, AlertTriangle, Clock, Eye, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import FlowThumbnail from '@/components/FlowThumbnail';
 import type { SankeyData } from '@/types/sankey';
@@ -39,6 +41,8 @@ interface SystemLog {
 }
 
 const AdminPendingUpdates = () => {
+  const { user } = useAuth();
+  const { isAdmin, isLoading: isCheckingAdmin } = useAdminCheck();
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdate[]>([]);
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +51,8 @@ const AdminPendingUpdates = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchData = async () => {
+    if (!isAdmin) return;
+    
     setIsLoading(true);
     try {
       // Fetch pending updates with flow info
@@ -79,8 +85,10 @@ const AdminPendingUpdates = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isAdmin) {
+      fetchData();
+    }
+  }, [isAdmin]);
 
   const handleAction = async (updateId: string, action: 'approve' | 'discard') => {
     setProcessingId(updateId);
@@ -147,6 +155,39 @@ const AdminPendingUpdates = () => {
   const pendingCount = pendingUpdates.filter((u) => u.status === 'pending').length;
   const reviewCount = pendingUpdates.filter((u) => u.status === 'manual_review').length;
   const errorCount = systemLogs.filter((l) => l.level === 'error').length;
+
+  // Show loading state while checking admin status
+  if (isCheckingAdmin) {
+    return (
+      <Card className="glass border-border/50">
+        <CardContent className="py-12">
+          <div className="flex flex-col items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Verifying admin access...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show access denied if not admin
+  if (!user || !isAdmin) {
+    return (
+      <Card className="glass border-border/50">
+        <CardContent className="py-12">
+          <div className="flex flex-col items-center justify-center text-center">
+            <ShieldAlert className="w-16 h-16 text-destructive/50 mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">Access Denied</h3>
+            <p className="text-muted-foreground max-w-md">
+              {!user 
+                ? 'Please sign in to access admin features.'
+                : 'You do not have admin privileges. Contact a site administrator to request access.'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="glass border-border/50">
