@@ -32,29 +32,29 @@ const Header = ({ onUploadClick }: HeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center">
-              <GitBranch className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold text-foreground">MySankey</span>
-          </Link>
-          
-          <Link 
-            to="/explore" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
-          >
-            <Compass className="w-4 h-4" />
-            Explore
-          </Link>
-        </div>
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center">
+            <GitBranch className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <span className="text-xl font-semibold text-foreground">MySankey</span>
+        </Link>
         
         <div className="flex items-center gap-2">
+          <Link to="/explore">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="btn-glass hover:bg-primary/10 hover:text-primary hover:border-primary/50"
+            >
+              <Compass className="w-4 h-4 mr-2" />
+              Explore
+            </Button>
+          </Link>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={onUploadClick}
-            className="btn-glass"
+            className="btn-glass hover:bg-primary/10 hover:text-primary hover:border-primary/50"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload CSV
