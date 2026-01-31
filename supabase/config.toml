@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.seed-gallery-flow]
 verify_jwt = false
+
+[functions.cron-refresh-gallery]
+verify_jwt = false
+
+[functions.approve-pending-update]
+verify_jwt = false
