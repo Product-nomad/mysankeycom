@@ -180,12 +180,12 @@ const Index = () => {
                 </div>
               </div>}
             <SankeyChart ref={chartRef} className="w-full h-[350px] sm:h-[400px] md:h-[450px] min-w-[320px]" data={data} onNodeClick={drillDown} settings={settings} />
+            
+            {/* AI Chat - inside diagram container */}
+            {data && <DiagramChat data={data} query={currentQuery} />}
           </div>
         </div>
       </section>
-
-      {/* AI Chat - only show when diagram is active */}
-      {data && <DiagramChat data={data} query={currentQuery} />}
 
       {/* Featured Flows Section */}
       <section className="py-8 px-4 bg-muted/30" id="features">
