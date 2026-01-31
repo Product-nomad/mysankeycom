@@ -88,7 +88,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_flows_public: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          description: string | null
+          id: string | null
+          is_public: boolean | null
+          settings: Json | null
+          share_slug: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          description?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          settings?: Json | null
+          share_slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          description?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          settings?: Json | null
+          share_slug?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
