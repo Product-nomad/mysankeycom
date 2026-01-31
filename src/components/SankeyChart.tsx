@@ -1,4 +1,4 @@
-import { useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useCallback, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { useTheme } from 'next-themes';
 import type { SankeyData } from '@/hooks/useSankeyData';
@@ -53,10 +53,16 @@ const defaultData: SankeyData = {
 const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
   ({ className, data, onNodeClick, settings }, ref) => {
     const chartRef = useRef<ReactECharts>(null);
+    const onNodeClickRef = useRef(onNodeClick);
     const { resolvedTheme } = useTheme();
     const chartData = data || defaultData;
     const isDark = resolvedTheme === 'dark';
     const unit = chartData.unit || '';
+
+    // Keep the ref updated with the latest callback
+    useEffect(() => {
+      onNodeClickRef.current = onNodeClick;
+    }, [onNodeClick]);
 
     // Forward the ref so parent can access chart instance
     useImperativeHandle(ref, () => chartRef.current as ReactECharts);
@@ -175,8 +181,8 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
     const handleChartReady = useCallback(
       (chart: any) => {
         chart.on('click', 'series.sankey', (params: any) => {
-          if (params.dataType === 'node' && onNodeClick) {
-            onNodeClick(params.name);
+          if (params.dataType === 'node' && onNodeClickRef.current) {
+            onNodeClickRef.current(params.name);
           }
         });
 
@@ -191,7 +197,7 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
           chart.getZr().setCursorStyle('default');
         });
       },
-      [onNodeClick]
+      []
     );
 
     return (
