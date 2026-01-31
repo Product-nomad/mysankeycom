@@ -10,7 +10,7 @@ import ChartSettings from '@/components/ChartSettings';
 import FlowActions from '@/components/FlowActions';
 import { useSankeyData } from '@/hooks/useSankeyData';
 import type { ChartSettings as ChartSettingsType } from '@/types/sankey';
-import { Zap, Globe, TrendingUp, Database, X, Loader2, MousePointerClick } from 'lucide-react';
+import { Zap, Globe, TrendingUp, Database, X, Loader2, MousePointerClick, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 const featuredFlows = [{
   title: 'Global Energy Flow',
@@ -147,7 +147,13 @@ const Index = () => {
             </h2>
             
             {data && <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
-                
+                {/* Back button inline with other actions */}
+                {canGoBack && (
+                  <Button variant="outline" onClick={goBack} size="sm">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                )}
                 
                 <ChartSettings settings={settings} onSettingsChange={setSettings} />
                 
@@ -159,11 +165,6 @@ const Index = () => {
                 </Button>
               </div>}
           </div>
-
-          {/* Breadcrumbs */}
-          {breadcrumbs.length > 0 && <div className="max-w-4xl mx-auto mb-2">
-              <Breadcrumbs items={breadcrumbs} onNavigate={goToBreadcrumb} onBack={goBack} canGoBack={canGoBack} />
-            </div>}
           
           <div className="bg-card rounded-xl border border-border/50 shadow-soft p-2 sm:p-3 md:p-4 relative overflow-x-auto">
             {/* Unit indicator */}
