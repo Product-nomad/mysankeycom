@@ -6,6 +6,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// Sanitize user input for AI prompts to prevent prompt injection
+const sanitizeForPrompt = (input: string): string => {
+  return input
+    .replace(/[\n\r]/g, ' ')              // Remove newlines
+    .replace(/[\x00-\x1F\x7F]/g, '')       // Remove control characters
+    .replace(/"/g, "'")                     // Normalize quotes
+    .replace(/system:/gi, '')               // Remove potential system commands
+    .replace(/ignore\s+(all\s+)?previous\s+instructions?/gi, '') // Remove injection attempts
+    .trim();
+};
+
+// Validate AI-generated node names to prevent XSS
+const validateNodeName = (name: string): boolean => {
+  if (!name || typeof name !== 'string') return false;
+  if (name.length > 100) return false;
+  if (/<[^>]*>/i.test(name)) return false;  // No HTML tags
+  if (/(javascript:|data:|onerror=|onclick=)/i.test(name)) return false;
+  return true;
+};
+
 const getSystemPrompt = (isDrillDown: boolean, originalQuery?: string, clickedNodeName?: string) => {
   const currentYear = new Date().getFullYear();
   
@@ -139,16 +159,21 @@ serve(async (req) => {
 
     const { query, originalQuery, clickedNodeName } = await req.json();
     
-    const searchQuery = query || originalQuery;
+    // Sanitize all user inputs to prevent prompt injection
+    const rawQuery = query || originalQuery;
     const isDrillDown = !!(originalQuery && clickedNodeName);
 
-    
-    if (!searchQuery || typeof searchQuery !== 'string') {
+    if (!rawQuery || typeof rawQuery !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Query is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Sanitize inputs before using in prompts
+    const searchQuery = sanitizeForPrompt(rawQuery);
+    const safeClickedNodeName = clickedNodeName ? sanitizeForPrompt(clickedNodeName) : undefined;
+    const safeOriginalQuery = originalQuery ? sanitizeForPrompt(originalQuery) : undefined;
 
     // Validate input length to prevent abuse
     if (searchQuery.length > 500) {
@@ -174,12 +199,12 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = getSystemPrompt(isDrillDown, originalQuery, clickedNodeName);
+    const systemPrompt = getSystemPrompt(isDrillDown, safeOriginalQuery, safeClickedNodeName);
     const userMessage = isDrillDown 
-      ? `Drill down into "${clickedNodeName}" from the topic "${originalQuery}". Show detailed sub-flows.`
+      ? `Drill down into "${safeClickedNodeName}" from the topic "${safeOriginalQuery}". Show detailed sub-flows.`
       : `Generate a detailed Sankey diagram for: ${searchQuery}`;
 
-    console.log(`Generating Sankey data - User: ${userId || 'anonymous'}, Query: ${searchQuery}, DrillDown: ${isDrillDown}, Node: ${clickedNodeName || 'N/A'}`);
+    console.log(`Generating Sankey data - User: ${userId || 'anonymous'}, Query: ${searchQuery}, DrillDown: ${isDrillDown}, Node: ${safeClickedNodeName || 'N/A'}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -266,11 +291,26 @@ serve(async (req) => {
       ];
     }
 
+    // Validate and filter nodes to prevent XSS
+    sankeyData.nodes = sankeyData.nodes.filter((node: any) => {
+      if (!validateNodeName(node.name)) {
+        console.warn(`Filtered invalid node name: ${node.name?.substring(0, 50)}`);
+        return false;
+      }
+      return true;
+    });
+
     // Ensure all links have confidence (fallback to 'projected')
     sankeyData.links = sankeyData.links.map((link: any) => ({
       ...link,
       confidence: link.confidence || 'projected'
     }));
+
+    // Filter links to only include validated nodes
+    const validNodeNames = new Set(sankeyData.nodes.map((n: any) => n.name));
+    sankeyData.links = sankeyData.links.filter((link: any) => 
+      validNodeNames.has(link.source) && validNodeNames.has(link.target)
+    );
 
     console.log(`Generated ${sankeyData.nodes.length} nodes and ${sankeyData.links.length} links for user ${userId}`);
 
