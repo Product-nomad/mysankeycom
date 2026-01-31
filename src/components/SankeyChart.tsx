@@ -12,7 +12,7 @@ interface SankeyChartProps {
   settings?: ChartSettings;
 }
 
-// Default sample data
+// Default sample data with unit for demo purposes
 const defaultData: SankeyData = {
   nodes: [
     { name: 'Solar', itemStyle: { color: '#f59e0b' } },
@@ -48,6 +48,7 @@ const defaultData: SankeyData = {
     { source: 'Commercial', target: 'Cooling', value: 18 },
     { source: 'Commercial', target: 'Heating', value: 12 },
   ],
+  unit: 'GW', // Add unit for demo values
 };
 
 const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
