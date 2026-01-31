@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import FlowCard from '@/components/FlowCard';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import type { SankeyData, ChartSettings } from '@/types/sankey';
 
 export interface PublicFlow {
@@ -176,6 +177,8 @@ const Explore = () => {
           </Button>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };
