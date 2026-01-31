@@ -186,7 +186,7 @@ const Index = () => {
             </div>
           )}
           
-          <div className="bg-card rounded-2xl border border-border/50 shadow-soft p-4 md:p-8 relative">
+          <div className="bg-card rounded-2xl border border-border/50 shadow-soft p-2 sm:p-4 md:p-8 relative overflow-x-auto">
             {isLoading && (
               <div className="absolute inset-0 bg-card/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
                 <div className="text-center">
@@ -200,7 +200,7 @@ const Index = () => {
             )}
             <SankeyChart
               ref={chartRef}
-              className="w-full h-[500px]"
+              className="w-full h-[400px] sm:h-[450px] md:h-[500px] min-w-[320px]"
               data={data}
               onNodeClick={data ? drillDown : undefined}
               settings={settings}
