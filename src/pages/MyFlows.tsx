@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Eye, Share2, Lock, Globe } from 'lucide-react';
+import { Trash2, Eye, Share2, Lock, Globe, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -39,6 +40,7 @@ const MyFlows = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [flows, setFlows] = useState<UserFlow[]>([]);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -74,6 +76,55 @@ const MyFlows = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const generateSlug = () => {
+    return Math.random().toString(36).substring(2, 10);
+  };
+
+  const handleTogglePublic = async (flow: UserFlow) => {
+    setTogglingId(flow.id);
+    try {
+      const newIsPublic = !flow.is_public;
+      const updateData: { is_public: boolean; share_slug?: string | null } = {
+        is_public: newIsPublic,
+      };
+
+      // Generate a share slug if making public and doesn't have one
+      if (newIsPublic && !flow.share_slug) {
+        updateData.share_slug = generateSlug();
+      }
+
+      const { error } = await supabase
+        .from('user_flows')
+        .update(updateData)
+        .eq('id', flow.id);
+
+      if (error) throw error;
+
+      setFlows((prev) =>
+        prev.map((f) =>
+          f.id === flow.id
+            ? { ...f, is_public: newIsPublic, share_slug: updateData.share_slug ?? f.share_slug }
+            : f
+        )
+      );
+
+      toast({
+        title: newIsPublic ? 'Flow is now public' : 'Flow is now private',
+        description: newIsPublic
+          ? 'Your flow will appear in the public gallery.'
+          : 'Your flow is no longer publicly visible.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Failed to update flow',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -173,22 +224,33 @@ const MyFlows = () => {
                           </CardDescription>
                         )}
                       </div>
-                      <Badge
-                        variant={flow.is_public ? 'default' : 'secondary'}
-                        className="ml-2 shrink-0"
-                      >
-                        {flow.is_public ? (
-                          <>
-                            <Globe className="w-3 h-3 mr-1" />
-                            Public
-                          </>
+                      <div className="flex items-center gap-2 ml-2 shrink-0">
+                        {togglingId === flow.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                         ) : (
-                          <>
-                            <Lock className="w-3 h-3 mr-1" />
-                            Private
-                          </>
+                          <Switch
+                            id={`public-${flow.id}`}
+                            checked={flow.is_public}
+                            onCheckedChange={() => handleTogglePublic(flow)}
+                          />
                         )}
-                      </Badge>
+                        <Label
+                          htmlFor={`public-${flow.id}`}
+                          className="text-sm cursor-pointer flex items-center gap-1"
+                        >
+                          {flow.is_public ? (
+                            <>
+                              <Globe className="w-3 h-3" />
+                              Public
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="w-3 h-3" />
+                              Private
+                            </>
+                          )}
+                        </Label>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
