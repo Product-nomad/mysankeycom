@@ -56,9 +56,32 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
     const { resolvedTheme } = useTheme();
     const chartData = data || defaultData;
     const isDark = resolvedTheme === 'dark';
+    const unit = chartData.unit || '';
 
     // Forward the ref so parent can access chart instance
     useImperativeHandle(ref, () => chartRef.current as ReactECharts);
+
+    // Calculate node totals (sum of incoming or outgoing values)
+    const nodeTotals = new Map<string, number>();
+    chartData.links.forEach(link => {
+      // Add to target node (incoming)
+      nodeTotals.set(link.target, (nodeTotals.get(link.target) || 0) + link.value);
+      // For source nodes without incoming links, use outgoing
+      if (!nodeTotals.has(link.source)) {
+        const outgoing = chartData.links
+          .filter(l => l.source === link.source)
+          .reduce((sum, l) => sum + l.value, 0);
+        nodeTotals.set(link.source, outgoing);
+      }
+    });
+
+    // Format value with unit
+    const formatValue = (value: number, unitStr: string) => {
+      if (value >= 1000) {
+        return `${(value / 1000).toFixed(1)}K ${unitStr}`.trim();
+      }
+      return `${value.toLocaleString()} ${unitStr}`.trim();
+    };
 
     // Apply theme colors to nodes
     const themedNodes = chartData.nodes.map((node, index) => {
@@ -90,14 +113,23 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
         },
         formatter: (params: any) => {
           if (params.dataType === 'node') {
+            const total = nodeTotals.get(params.name) || 0;
             return `<div style="padding: 4px 0;">
               <strong>${params.name}</strong>
+              <div style="font-size: 12px; margin-top: 4px;">
+                Total: ${formatValue(total, unit)}
+              </div>
               <div style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 4px;">
                 Click to expand details
               </div>
             </div>`;
           }
-          return `${params.data.source} → ${params.data.target}<br/>Value: ${params.data.value}`;
+          return `<div style="padding: 4px 0;">
+            <strong>${params.data.source} → ${params.data.target}</strong>
+            <div style="font-size: 12px; margin-top: 4px;">
+              ${formatValue(params.data.value, unit)}
+            </div>
+          </div>`;
         },
       },
       series: [
@@ -125,7 +157,14 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
             fontWeight: 500,
             color: labelColor,
             overflow: 'truncate',
-            width: 80,
+            width: 120,
+            formatter: (params: any) => {
+              const total = nodeTotals.get(params.name) || 0;
+              if (total > 0 && unit) {
+                return `${params.name}\n${formatValue(total, unit)}`;
+              }
+              return params.name;
+            },
           },
           data: themedNodes,
           links: chartData.links,

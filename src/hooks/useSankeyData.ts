@@ -16,6 +16,7 @@ interface SankeyLink {
 export interface SankeyData {
   nodes: SankeyNode[];
   links: SankeyLink[];
+  unit?: string;
 }
 
 export interface HistoryEntry {
