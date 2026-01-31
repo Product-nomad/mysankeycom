@@ -1,9 +1,7 @@
 import { GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 const Header = () => {
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
+  return <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center">
@@ -19,9 +17,7 @@ const Header = () => {
           <a href="#examples" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Examples
           </a>
-          <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Pricing
-          </a>
+          
         </nav>
         
         <div className="flex items-center gap-3">
@@ -33,8 +29,6 @@ const Header = () => {
           </Button>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;
