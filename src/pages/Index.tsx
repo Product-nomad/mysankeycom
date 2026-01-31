@@ -132,9 +132,7 @@ const Index = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               {data ? `Flow Diagram: ${currentQuery}` : 'Interactive Demo'}
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {data ? 'AI-generated Sankey diagram. Click any node to drill down into its details.' : 'Explore a sample Sankey diagram showing global energy flow. Hover over nodes and links to see detailed information.'}
-            </p>
+            
             {data && <div className="flex items-center justify-center gap-4 mt-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
                   <MousePointerClick className="w-4 h-4" />
