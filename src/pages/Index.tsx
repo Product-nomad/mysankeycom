@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactECharts from 'echarts-for-react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
@@ -58,6 +59,7 @@ const stats = [{
 
 const Index = () => {
   const chartRef = useRef<ReactECharts>(null);
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<ChartSettingsType>({
     theme: 'default',
     nodeAlign: 'justify',
@@ -70,12 +72,20 @@ const Index = () => {
     currentQuery,
     breadcrumbs,
     canGoBack,
+    requiresAuth,
     generateSankeyData,
     drillDown,
     goBack,
     goToBreadcrumb,
     clearData
   } = useSankeyData();
+
+  // Redirect to auth page when authentication is required
+  useEffect(() => {
+    if (requiresAuth) {
+      navigate('/auth');
+    }
+  }, [requiresAuth, navigate]);
 
   return (
     <div className="min-h-screen bg-background">
