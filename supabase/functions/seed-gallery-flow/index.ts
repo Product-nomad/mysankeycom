@@ -98,6 +98,58 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  // Verify admin authorization
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log('Missing or invalid authorization header');
+    return new Response(
+      JSON.stringify({ success: false, error: 'Unauthorized - Login required' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Create client with user's auth token to verify identity
+  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } }
+  });
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+
+  if (claimsError || !claimsData?.claims?.sub) {
+    console.log('Failed to verify JWT:', claimsError?.message);
+    return new Response(
+      JSON.stringify({ success: false, error: 'Unauthorized - Invalid token' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const userId = claimsData.claims.sub as string;
+  console.log(`Authenticated user: ${userId}`);
+
+  // Check if user is admin using service role
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  
+  const { data: adminCheck, error: adminError } = await supabase
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', userId)
+    .single();
+
+  if (adminError || !adminCheck) {
+    console.log(`User ${userId} is not an admin`);
+    return new Response(
+      JSON.stringify({ success: false, error: 'Forbidden - Admin access required' }),
+      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  console.log(`Admin verified: ${userId}`);
+
   try {
     const { title, category } = await req.json();
     
@@ -109,8 +161,6 @@ serve(async (req) => {
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
     if (!LOVABLE_API_KEY) {
       return new Response(
@@ -119,7 +169,6 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const slug = generateSlug(title);
 
     // Check if flow already exists

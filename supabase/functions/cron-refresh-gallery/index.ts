@@ -71,8 +71,56 @@ serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  // Verify admin authorization
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log('Missing or invalid authorization header');
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized - Login required' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Create client with user's auth token to verify identity
+  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } }
+  });
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+
+  if (claimsError || !claimsData?.claims?.sub) {
+    console.log('Failed to verify JWT:', claimsError?.message);
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized - Invalid token' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const userId = claimsData.claims.sub as string;
+  console.log(`Authenticated user: ${userId}`);
+
+  // Check if user is admin using service role
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  
+  const { data: adminCheck, error: adminError } = await supabase
+    .from('admin_users')
+    .select('user_id')
+    .eq('user_id', userId)
+    .single();
+
+  if (adminError || !adminCheck) {
+    console.log(`User ${userId} is not an admin`);
+    return new Response(
+      JSON.stringify({ error: 'Forbidden - Admin access required' }),
+      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  console.log(`Admin verified: ${userId}`);
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -109,7 +157,7 @@ serve(async (req) => {
     }
 
     console.log(`Found ${staleFlows.length} stale flows to refresh`);
-    await logInfo(supabase, 'cron-refresh-gallery', `Starting refresh for ${staleFlows.length} flows`);
+    await logInfo(supabase, 'cron-refresh-gallery', `Starting refresh for ${staleFlows.length} flows`, { triggeredBy: userId });
 
     let processed = 0;
     let errors = 0;
