@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface SankeyNode {
   name: string;
@@ -40,7 +39,7 @@ export const useSankeyData = () => {
   const [originalQuery, setOriginalQuery] = useState<string>('');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
-  const navigate = useNavigate();
+  const [requiresAuth, setRequiresAuth] = useState(false);
 
   const addColorsToNodes = useCallback((nodes: { name: string }[]): SankeyNode[] => {
     return nodes.map((node, index) => ({
@@ -53,14 +52,11 @@ export const useSankeyData = () => {
   const checkAuth = async (): Promise<boolean> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      toast.error('Please sign in to generate diagrams', {
-        action: {
-          label: 'Sign In',
-          onClick: () => navigate('/auth'),
-        },
-      });
+      setRequiresAuth(true);
+      toast.error('Please sign in to generate diagrams');
       return false;
     }
+    setRequiresAuth(false);
     return true;
   };
 
@@ -229,6 +225,7 @@ export const useSankeyData = () => {
     history,
     breadcrumbs,
     canGoBack,
+    requiresAuth,
     generateSankeyData,
     drillDown,
     goBack,
