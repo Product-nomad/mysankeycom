@@ -2,8 +2,9 @@ import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import FeatureCard from '@/components/FeatureCard';
 import SankeyChart from '@/components/SankeyChart';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import { useSankeyData } from '@/hooks/useSankeyData';
-import { Zap, Globe, TrendingUp, Database, X, Loader2 } from 'lucide-react';
+import { Zap, Globe, TrendingUp, Database, X, Loader2, MousePointerClick } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const featuredFlows = [
@@ -45,7 +46,18 @@ const stats = [
 ];
 
 const Index = () => {
-  const { data, isLoading, currentQuery, generateSankeyData, clearData } = useSankeyData();
+  const { 
+    data, 
+    isLoading, 
+    currentQuery, 
+    breadcrumbs,
+    canGoBack,
+    generateSankeyData, 
+    drillDown,
+    goBack,
+    goToBreadcrumb,
+    clearData 
+  } = useSankeyData();
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,7 +91,7 @@ const Index = () => {
             </span>
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary" />
-              Interactive exploration
+              Click nodes to drill down
             </span>
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-sankey-3" />
@@ -109,39 +121,63 @@ const Index = () => {
       {/* Interactive Demo Section */}
       <section className="py-20 px-4" id="examples">
         <div className="container mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               {data ? `Flow Diagram: ${currentQuery}` : 'Interactive Demo'}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {data 
-                ? 'AI-generated Sankey diagram based on your search. Hover over nodes and links to explore.'
+                ? 'AI-generated Sankey diagram. Click any node to drill down into its details.'
                 : 'Explore a sample Sankey diagram showing global energy flow. Hover over nodes and links to see detailed information.'
               }
             </p>
             {data && (
-              <Button
-                variant="outline"
-                onClick={clearData}
-                className="mt-4"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Clear & Show Default
-              </Button>
+              <div className="flex items-center justify-center gap-4 mt-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+                  <MousePointerClick className="w-4 h-4" />
+                  Click nodes to explore deeper
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={clearData}
+                  size="sm"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear
+                </Button>
+              </div>
             )}
           </div>
+
+          {/* Breadcrumbs */}
+          {breadcrumbs.length > 0 && (
+            <div className="max-w-4xl mx-auto">
+              <Breadcrumbs
+                items={breadcrumbs}
+                onNavigate={goToBreadcrumb}
+                onBack={goBack}
+                canGoBack={canGoBack}
+              />
+            </div>
+          )}
           
           <div className="bg-card rounded-2xl border border-border/50 shadow-soft p-4 md:p-8 relative">
             {isLoading && (
               <div className="absolute inset-0 bg-card/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
                 <div className="text-center">
                   <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-                  <p className="text-lg font-medium text-foreground">Generating your diagram...</p>
+                  <p className="text-lg font-medium text-foreground">
+                    {canGoBack ? 'Drilling down...' : 'Generating your diagram...'}
+                  </p>
                   <p className="text-sm text-muted-foreground">This may take a few seconds</p>
                 </div>
               </div>
             )}
-            <SankeyChart className="w-full h-[500px]" data={data} />
+            <SankeyChart 
+              className="w-full h-[500px]" 
+              data={data} 
+              onNodeClick={data ? drillDown : undefined}
+            />
           </div>
         </div>
       </section>

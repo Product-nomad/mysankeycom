@@ -1,9 +1,11 @@
+import { useCallback, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { SankeyData } from '@/hooks/useSankeyData';
 
 interface SankeyChartProps {
   className?: string;
   data?: SankeyData | null;
+  onNodeClick?: (nodeName: string) => void;
 }
 
 // Default sample data
@@ -44,7 +46,8 @@ const defaultData: SankeyData = {
   ],
 };
 
-const SankeyChart = ({ className, data }: SankeyChartProps) => {
+const SankeyChart = ({ className, data, onNodeClick }: SankeyChartProps) => {
+  const chartRef = useRef<ReactECharts>(null);
   const chartData = data || defaultData;
 
   const option = {
@@ -56,6 +59,17 @@ const SankeyChart = ({ className, data }: SankeyChartProps) => {
       textStyle: {
         color: 'hsl(210, 20%, 98%)',
         fontFamily: 'Inter, system-ui, sans-serif',
+      },
+      formatter: (params: any) => {
+        if (params.dataType === 'node') {
+          return `<div style="padding: 4px 0;">
+            <strong>${params.name}</strong>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+              Click to expand details
+            </div>
+          </div>`;
+        }
+        return `${params.data.source} → ${params.data.target}<br/>Value: ${params.data.value}`;
       },
     },
     series: [
@@ -84,14 +98,35 @@ const SankeyChart = ({ className, data }: SankeyChartProps) => {
     ],
   };
 
+  const handleChartReady = useCallback((chart: any) => {
+    chart.on('click', 'series.sankey', (params: any) => {
+      if (params.dataType === 'node' && onNodeClick) {
+        onNodeClick(params.name);
+      }
+    });
+
+    // Add cursor pointer on node hover
+    chart.on('mouseover', 'series.sankey', (params: any) => {
+      if (params.dataType === 'node') {
+        chart.getZr().setCursorStyle('pointer');
+      }
+    });
+
+    chart.on('mouseout', 'series.sankey', () => {
+      chart.getZr().setCursorStyle('default');
+    });
+  }, [onNodeClick]);
+
   return (
     <div className={className}>
       <ReactECharts
+        ref={chartRef}
         option={option}
         style={{ height: '100%', width: '100%', minHeight: '400px' }}
         opts={{ renderer: 'svg' }}
         notMerge={true}
         lazyUpdate={true}
+        onChartReady={handleChartReady}
       />
     </div>
   );
