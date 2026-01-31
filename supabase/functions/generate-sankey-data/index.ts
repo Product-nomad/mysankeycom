@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,6 +62,37 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.error("Missing or invalid Authorization header");
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error("JWT validation failed:", claimsError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Authenticated user: ${userId}`);
+
     const { query, originalQuery, clickedNodeName } = await req.json();
     
     const searchQuery = query || originalQuery;
@@ -69,6 +101,21 @@ serve(async (req) => {
     if (!searchQuery || typeof searchQuery !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Query is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate input length to prevent abuse
+    if (searchQuery.length > 500) {
+      return new Response(
+        JSON.stringify({ error: 'Query too long (max 500 characters)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (clickedNodeName && clickedNodeName.length > 200) {
+      return new Response(
+        JSON.stringify({ error: 'Node name too long (max 200 characters)' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -87,7 +134,7 @@ serve(async (req) => {
       ? `Drill down into "${clickedNodeName}" from the topic "${originalQuery}". Show detailed sub-flows.`
       : `Generate a detailed Sankey diagram for: ${searchQuery}`;
 
-    console.log(`Generating Sankey data - Query: ${searchQuery}, DrillDown: ${isDrillDown}, Node: ${clickedNodeName || 'N/A'}`);
+    console.log(`Generating Sankey data - User: ${userId}, Query: ${searchQuery}, DrillDown: ${isDrillDown}, Node: ${clickedNodeName || 'N/A'}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -167,7 +214,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Generated ${sankeyData.nodes.length} nodes and ${sankeyData.links.length} links`);
+    console.log(`Generated ${sankeyData.nodes.length} nodes and ${sankeyData.links.length} links for user ${userId}`);
 
     return new Response(
       JSON.stringify(sankeyData),
