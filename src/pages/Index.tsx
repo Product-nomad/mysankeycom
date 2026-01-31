@@ -12,7 +12,6 @@ import { useSankeyData } from '@/hooks/useSankeyData';
 import type { ChartSettings as ChartSettingsType } from '@/types/sankey';
 import { Zap, Globe, TrendingUp, Database, X, Loader2, MousePointerClick } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 const featuredFlows = [{
   title: 'Global Energy Flow',
   description: 'Visualize how energy flows from sources to end uses across different sectors worldwide.',
@@ -38,7 +37,6 @@ const featuredFlows = [{
   nodes: 26,
   gradient: 'bg-gradient-to-br from-purple-500 to-pink-600'
 }];
-
 const stats = [{
   icon: Zap,
   value: '10K+',
@@ -56,16 +54,14 @@ const stats = [{
   value: '5M+',
   label: 'Data Points'
 }];
-
 const Index = () => {
   const chartRef = useRef<ReactECharts>(null);
   const navigate = useNavigate();
   const [settings, setSettings] = useState<ChartSettingsType>({
     theme: 'default',
     nodeAlign: 'justify',
-    linkOpacity: 0.5,
+    linkOpacity: 0.5
   });
-
   const {
     data,
     isLoading,
@@ -78,9 +74,7 @@ const Index = () => {
     goToBreadcrumb,
     clearData
   } = useSankeyData();
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Header />
       
       {/* Hero Section */}
@@ -92,27 +86,27 @@ const Index = () => {
           </div>
           
           <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4 animate-slide-up" style={{
-            animationDelay: '0.1s'
-          }}>
+          animationDelay: '0.1s'
+        }}>
             Visualize Any Flow with
             <span className="text-gradient block mt-1 pb-1">Interactive Sankey Diagrams</span>
           </h1>
           
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-6 animate-slide-up" style={{
-            animationDelay: '0.2s'
-          }}>
+          animationDelay: '0.2s'
+        }}>
             Transform complex data relationships into beautiful, interactive visualizations.
           </p>
           
           <div className="animate-slide-up" style={{
-            animationDelay: '0.3s'
-          }}>
+          animationDelay: '0.3s'
+        }}>
             <SearchBar onSearch={generateSankeyData} isLoading={isLoading} />
           </div>
           
           <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs text-muted-foreground animate-fade-in" style={{
-            animationDelay: '0.4s'
-          }}>
+          animationDelay: '0.4s'
+        }}>
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-accent" />
               AI-powered
@@ -133,15 +127,13 @@ const Index = () => {
       <section className="py-6 px-4 border-y border-border/50 bg-muted/30">
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
+            {stats.map((stat, index) => <div key={index} className="text-center">
                 <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary mb-2">
                   <stat.icon className="w-5 h-5" />
                 </div>
                 <div className="text-xl md:text-2xl font-bold text-foreground">{stat.value}</div>
                 <div className="text-xs text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -154,41 +146,27 @@ const Index = () => {
               {data ? `Flow Diagram: ${currentQuery}` : 'Interactive Demo'}
             </h2>
             
-            {data && (
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
-                  <MousePointerClick className="w-3 h-3" />
-                  Click nodes to explore deeper
-                </div>
+            {data && <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+                
                 
                 <ChartSettings settings={settings} onSettingsChange={setSettings} />
                 
-                <FlowActions
-                  data={data}
-                  currentQuery={currentQuery}
-                  breadcrumbs={breadcrumbs}
-                  settings={settings}
-                  chartRef={chartRef}
-                />
+                <FlowActions data={data} currentQuery={currentQuery} breadcrumbs={breadcrumbs} settings={settings} chartRef={chartRef} />
                 
                 <Button variant="outline" onClick={clearData} size="sm">
                   <X className="w-4 h-4 mr-2" />
                   Clear
                 </Button>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Breadcrumbs */}
-          {breadcrumbs.length > 0 && (
-            <div className="max-w-4xl mx-auto mb-2">
+          {breadcrumbs.length > 0 && <div className="max-w-4xl mx-auto mb-2">
               <Breadcrumbs items={breadcrumbs} onNavigate={goToBreadcrumb} onBack={goBack} canGoBack={canGoBack} />
-            </div>
-          )}
+            </div>}
           
           <div className="bg-card rounded-xl border border-border/50 shadow-soft p-2 sm:p-3 md:p-4 relative overflow-x-auto">
-            {isLoading && (
-              <div className="absolute inset-0 bg-card/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
+            {isLoading && <div className="absolute inset-0 bg-card/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
                 <div className="text-center">
                   <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-3" />
                   <p className="text-base font-medium text-foreground">
@@ -196,15 +174,8 @@ const Index = () => {
                   </p>
                   <p className="text-xs text-muted-foreground">This may take a few seconds</p>
                 </div>
-              </div>
-            )}
-            <SankeyChart
-              ref={chartRef}
-              className="w-full h-[350px] sm:h-[400px] md:h-[450px] min-w-[320px]"
-              data={data}
-              onNodeClick={data ? drillDown : undefined}
-              settings={settings}
-            />
+              </div>}
+            <SankeyChart ref={chartRef} className="w-full h-[350px] sm:h-[400px] md:h-[450px] min-w-[320px]" data={data} onNodeClick={data ? drillDown : undefined} settings={settings} />
           </div>
         </div>
       </section>
@@ -213,16 +184,11 @@ const Index = () => {
       <section className="py-8 px-4 bg-muted/30" id="features">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {featuredFlows.map((flow, index) => (
-              <div
-                key={index}
-                className="animate-slide-up cursor-pointer"
-                style={{ animationDelay: `${index * 0.1}s` }}
-                onClick={() => generateSankeyData(flow.title)}
-              >
+            {featuredFlows.map((flow, index) => <div key={index} className="animate-slide-up cursor-pointer" style={{
+            animationDelay: `${index * 0.1}s`
+          }} onClick={() => generateSankeyData(flow.title)}>
                 <FeatureCard {...flow} />
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -235,8 +201,6 @@ const Index = () => {
           </p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
