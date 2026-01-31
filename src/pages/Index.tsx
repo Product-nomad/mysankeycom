@@ -76,7 +76,7 @@ const Index = () => {
           animationDelay: '0.1s'
         }}>
             Visualize Any Flow with
-            <span className="text-gradient block mt-2">Interactive Sankey Diagrams</span>
+            <span className="text-gradient block mt-2 pb-1">Interactive Sankey Diagrams</span>
           </h1>
           
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-slide-up" style={{
