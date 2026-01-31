@@ -81,6 +81,7 @@ export const useSankeyData = () => {
       const newData: SankeyData = {
         nodes: nodesWithColors,
         links: responseData.links,
+        unit: responseData.unit,
       };
 
       setData(newData);
@@ -137,6 +138,7 @@ export const useSankeyData = () => {
       const newData: SankeyData = {
         nodes: nodesWithColors,
         links: responseData.links,
+        unit: responseData.unit,
       };
 
       setData(newData);
