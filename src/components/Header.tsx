@@ -1,7 +1,7 @@
-import { GitBranch, LogOut, User, Upload } from 'lucide-react';
+import { GitBranch, LogOut, User, Upload, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,8 +38,14 @@ const Header = ({ onUploadClick }: HeaderProps) => {
           <span className="text-xl font-semibold text-foreground">MySankey</span>
         </div>
         
-        <nav className="hidden md:flex items-center gap-8">
-          {/* Navigation links can be added here */}
+        <nav className="hidden md:flex items-center gap-6">
+          <Link 
+            to="/explore" 
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+          >
+            <Compass className="w-4 h-4" />
+            Explore
+          </Link>
         </nav>
         
         <div className="flex items-center gap-2">
