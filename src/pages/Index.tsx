@@ -148,12 +148,10 @@ const Index = () => {
             
             {data && <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
                 {/* Back button inline with other actions */}
-                {canGoBack && (
-                  <Button variant="outline" onClick={goBack} size="sm">
+                {canGoBack && <Button variant="outline" onClick={goBack} size="sm">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back
-                  </Button>
-                )}
+                  </Button>}
                 
                 <ChartSettings settings={settings} onSettingsChange={setSettings} />
                 
@@ -168,14 +166,9 @@ const Index = () => {
           
           <div className="bg-card rounded-xl border border-border/50 shadow-soft p-2 sm:p-3 md:p-4 relative overflow-x-auto">
             {/* Unit indicator */}
-            {data?.unit && (
-              <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
-                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/80 backdrop-blur-sm text-xs font-medium text-muted-foreground border border-border/50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  Values in {data.unit}
-                </span>
-              </div>
-            )}
+            {data?.unit && <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+                
+              </div>}
             {isLoading && <div className="absolute inset-0 bg-card/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
                 <div className="text-center">
                   <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-3" />
