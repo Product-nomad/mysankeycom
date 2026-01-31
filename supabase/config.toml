@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.diagram-chat]
 verify_jwt = false
+
+[functions.analyze-data-schema]
+verify_jwt = false
