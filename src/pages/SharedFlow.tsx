@@ -3,15 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { GitBranch, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SankeyChart from '@/components/SankeyChart';
-import Breadcrumbs from '@/components/Breadcrumbs';
 import { supabase } from '@/integrations/supabase/client';
 import type { SankeyData, ChartSettings } from '@/types/sankey';
 
 interface FlowData {
   title: string;
-  query: string;
   data: SankeyData;
-  breadcrumbs: string[];
   settings: ChartSettings;
   created_at: string;
 }
@@ -31,11 +28,11 @@ const SharedFlow = () => {
       }
 
       try {
+        // Use the public view which excludes sensitive fields (query, breadcrumbs, user_id)
         const { data, error: fetchError } = await supabase
-          .from('user_flows')
-          .select('title, query, data, breadcrumbs, settings, created_at')
+          .from('user_flows_public')
+          .select('title, data, settings, created_at')
           .eq('share_slug', slug)
-          .eq('is_public', true)
           .single();
 
         if (fetchError) {
@@ -49,9 +46,7 @@ const SharedFlow = () => {
 
         setFlow({
           title: data.title,
-          query: data.query,
           data: data.data as unknown as SankeyData,
-          breadcrumbs: (data.breadcrumbs || []) as unknown as string[],
           settings: data.settings as unknown as ChartSettings,
           created_at: data.created_at,
         });
@@ -124,17 +119,7 @@ const SharedFlow = () => {
             </p>
           </div>
 
-          {/* Breadcrumbs */}
-          {flow.breadcrumbs.length > 0 && (
-            <div className="max-w-4xl mx-auto mb-6">
-              <Breadcrumbs 
-                items={flow.breadcrumbs} 
-                onNavigate={() => {}} 
-                onBack={() => {}} 
-                canGoBack={false} 
-              />
-            </div>
-          )}
+          {/* Note: Breadcrumbs are hidden for shared flows to protect user search patterns */}
 
           {/* Chart */}
           <div className="bg-card rounded-2xl border border-border/50 shadow-soft p-4 md:p-8">
