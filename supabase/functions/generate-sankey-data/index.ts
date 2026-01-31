@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 const getSystemPrompt = (isDrillDown: boolean, originalQuery?: string, clickedNodeName?: string) => {
+  const currentYear = new Date().getFullYear();
+  
   const confidenceInstructions = `
 IMPORTANT: For each link, include a "confidence" field with one of these values:
 - "verified" - Data from official sources, financial reports, government statistics
@@ -14,9 +16,17 @@ IMPORTANT: For each link, include a "confidence" field with one of these values:
 - "projected" - AI-generated estimates based on patterns and trends
 
 Also include a "sources" array at the root level with objects containing:
-- "name": Source name (e.g., "Annual Report 2024", "IEA World Energy Outlook")
-- "url": URL if available, or null
+- "name": Source name - MUST include year ${currentYear} or ${currentYear - 1} (e.g., "Annual Report ${currentYear}", "Financial Statements ${currentYear}")
+- "url": A REAL, WORKING URL to the actual source document (e.g., investor relations page, official statistics site). Use null ONLY if no real URL exists.
 - "type": "official" | "industry" | "research" | "estimate"
+
+CRITICAL FOR SOURCES:
+- Use the MOST RECENT data available (${currentYear} or ${currentYear - 1})
+- Provide REAL URLs that actually work - check that the domain and path structure are realistic
+- For companies: use their investor relations pages (e.g., https://www.company.com/investors/)
+- For government data: use official statistics sites (e.g., eia.gov, bls.gov, ons.gov.uk)
+- For industry data: use reputable sources (e.g., IEA, World Bank, IMF)
+- NEVER make up fake URLs - if unsure, set url to null
 `;
 
   if (isDrillDown && originalQuery && clickedNodeName) {
@@ -24,6 +34,7 @@ Also include a "sources" array at the root level with objects containing:
 
 Original topic: ${originalQuery}
 Specific node to expand: ${clickedNodeName}
+Current year: ${currentYear}
 
 Provide a detailed sub-flow for this specific node "${clickedNodeName}" showing its internal breakdown and relationships.
 
@@ -34,7 +45,7 @@ Format:
   "unit": "USD",
   "nodes": [{"name": "Node A"}, {"name": "Node B"}],
   "links": [{"source": "Node A", "target": "Node B", "value": 100, "confidence": "verified"}],
-  "sources": [{"name": "Source Name", "url": "https://...", "type": "official"}]
+  "sources": [{"name": "Source Name ${currentYear}", "url": "https://real-url.com/path", "type": "official"}]
 }
 
 Rules:
@@ -44,11 +55,12 @@ Rules:
 4. Every link MUST include a "value" representing a realistic number based on the context
 5. Every link MUST include a "confidence" field (verified, estimated, or projected)
 6. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
-7. Include a top-level "sources" array with 2-5 relevant data sources
+7. Include a top-level "sources" array with 2-5 relevant data sources with REAL URLs
 8. Create a logical flow from inputs through "${clickedNodeName}" to outputs
 9. Node names should be concise but descriptive
 10. Values should be proportional and add up logically
 11. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
+12. Use the MOST RECENT available data (${currentYear} or ${currentYear - 1})
 
 ${confidenceInstructions}
 
@@ -57,6 +69,8 @@ Focus on accuracy and creating an insightful drill-down view of "${clickedNodeNa
 
   return `You are a data expert. The user will provide a topic (company, country, or concept). Generate a detailed Sankey diagram data structure in JSON format.
 
+Current year: ${currentYear}
+
 CRITICAL: Return ONLY valid JSON with no markdown, no code blocks, no explanation. Just the raw JSON object.
 
 Format:
@@ -64,7 +78,7 @@ Format:
   "unit": "B USD",
   "nodes": [{"name": "Node A"}, {"name": "Node B"}],
   "links": [{"source": "Node A", "target": "Node B", "value": 100, "confidence": "verified"}],
-  "sources": [{"name": "Source Name", "url": "https://...", "type": "official"}]
+  "sources": [{"name": "Source Name ${currentYear}", "url": "https://real-url.com/path", "type": "official"}]
 }
 
 Rules:
@@ -73,11 +87,12 @@ Rules:
 3. Every link MUST include a "value" representing a realistic number based on the context
 4. Every link MUST include a "confidence" field (verified, estimated, or projected)
 5. Include a top-level "unit" field with the appropriate unit (e.g., "$", "USD", "M USD", "B USD", "People", "MWh", "TWh", "Units", "Tonnes", "%") based on the query context
-6. Include a top-level "sources" array with 2-5 relevant data sources
+6. Include a top-level "sources" array with 2-5 relevant data sources with REAL, WORKING URLs
 7. Create a logical flow from sources to intermediates to destinations
 8. Node names should be concise but descriptive
 9. Values should be proportional and add up logically
 10. Use realistic, researched values - for money use actual figures (e.g., billions for large companies)
+11. Use the MOST RECENT available data (${currentYear} or ${currentYear - 1})
 
 ${confidenceInstructions}
 

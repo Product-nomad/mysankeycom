@@ -22,8 +22,8 @@ const DataSources = ({ sources }: DataSourcesProps) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-          <BookOpen className="h-3 w-3" />
+        <Button variant="outline" size="sm" className="btn-glass">
+          <BookOpen className="w-4 h-4 mr-2" />
           Sources ({sources.length})
         </Button>
       </PopoverTrigger>
