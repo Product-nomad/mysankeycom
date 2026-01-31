@@ -81,33 +81,20 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
       }
     });
 
-    // Format value with unit - always show unit for context
+    // Format value with unit - only show if unit exists
     const formatValue = (value: number, unitStr: string) => {
-      const unit = unitStr || 'units';
+      if (!unitStr) return null; // Don't format without a unit
+      
       if (value >= 1000000000) {
-        return `${(value / 1000000000).toFixed(1)}B ${unit}`;
+        return `${(value / 1000000000).toFixed(1)}B ${unitStr}`;
       }
       if (value >= 1000000) {
-        return `${(value / 1000000).toFixed(1)}M ${unit}`;
+        return `${(value / 1000000).toFixed(1)}M ${unitStr}`;
       }
       if (value >= 1000) {
-        return `${(value / 1000).toFixed(1)}K ${unit}`;
+        return `${(value / 1000).toFixed(1)}K ${unitStr}`;
       }
-      return `${value.toLocaleString()} ${unit}`;
-    };
-
-    // Short format for node labels (unit shown separately)
-    const formatValueShort = (value: number) => {
-      if (value >= 1000000000) {
-        return `${(value / 1000000000).toFixed(1)}B`;
-      }
-      if (value >= 1000000) {
-        return `${(value / 1000000).toFixed(1)}M`;
-      }
-      if (value >= 1000) {
-        return `${(value / 1000).toFixed(1)}K`;
-      }
-      return value.toLocaleString();
+      return `${value.toLocaleString()} ${unitStr}`;
     };
 
     // Apply theme colors to nodes
@@ -141,21 +128,19 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
         formatter: (params: any) => {
           if (params.dataType === 'node') {
             const total = nodeTotals.get(params.name) || 0;
+            const formattedValue = formatValue(total, unit);
             return `<div style="padding: 4px 0;">
               <strong>${params.name}</strong>
-              <div style="font-size: 12px; margin-top: 4px;">
-                Total: ${formatValue(total, unit)}
-              </div>
+              ${formattedValue ? `<div style="font-size: 12px; margin-top: 4px;">Total: ${formattedValue}</div>` : ''}
               <div style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 4px;">
                 Click to expand details
               </div>
             </div>`;
           }
+          const formattedValue = formatValue(params.data.value, unit);
           return `<div style="padding: 4px 0;">
             <strong>${params.data.source} → ${params.data.target}</strong>
-            <div style="font-size: 12px; margin-top: 4px;">
-              ${formatValue(params.data.value, unit)}
-            </div>
+            ${formattedValue ? `<div style="font-size: 12px; margin-top: 4px;">${formattedValue}</div>` : ''}
           </div>`;
         },
       },
