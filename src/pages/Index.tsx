@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import FeatureCard from '@/components/FeatureCard';
 import SankeyChart from '@/components/SankeyChart';
-import { Zap, Globe, TrendingUp, Database } from 'lucide-react';
+import { useSankeyData } from '@/hooks/useSankeyData';
+import { Zap, Globe, TrendingUp, Database, X, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const featuredFlows = [
   {
@@ -44,12 +45,7 @@ const stats = [
 ];
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    console.log('Searching for:', query);
-  };
+  const { data, isLoading, currentQuery, generateSankeyData, clearData } = useSankeyData();
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,13 +69,13 @@ const Index = () => {
           </p>
           
           <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar onSearch={generateSankeyData} isLoading={isLoading} />
           </div>
           
           <div className="flex flex-wrap justify-center gap-6 mt-8 text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-accent" />
-              Real-time updates
+              AI-powered generation
             </span>
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary" />
@@ -115,15 +111,37 @@ const Index = () => {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Interactive Demo
+              {data ? `Flow Diagram: ${currentQuery}` : 'Interactive Demo'}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Explore a sample Sankey diagram showing global energy flow. Hover over nodes and links to see detailed information.
+              {data 
+                ? 'AI-generated Sankey diagram based on your search. Hover over nodes and links to explore.'
+                : 'Explore a sample Sankey diagram showing global energy flow. Hover over nodes and links to see detailed information.'
+              }
             </p>
+            {data && (
+              <Button
+                variant="outline"
+                onClick={clearData}
+                className="mt-4"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Clear & Show Default
+              </Button>
+            )}
           </div>
           
-          <div className="bg-card rounded-2xl border border-border/50 shadow-soft p-4 md:p-8">
-            <SankeyChart className="w-full h-[500px]" />
+          <div className="bg-card rounded-2xl border border-border/50 shadow-soft p-4 md:p-8 relative">
+            {isLoading && (
+              <div className="absolute inset-0 bg-card/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+                <div className="text-center">
+                  <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+                  <p className="text-lg font-medium text-foreground">Generating your diagram...</p>
+                  <p className="text-sm text-muted-foreground">This may take a few seconds</p>
+                </div>
+              </div>
+            )}
+            <SankeyChart className="w-full h-[500px]" data={data} />
           </div>
         </div>
       </section>
@@ -144,8 +162,9 @@ const Index = () => {
             {featuredFlows.map((flow, index) => (
               <div 
                 key={index} 
-                className="animate-slide-up"
+                className="animate-slide-up cursor-pointer"
                 style={{ animationDelay: `${index * 0.1}s` }}
+                onClick={() => generateSankeyData(flow.title)}
               >
                 <FeatureCard {...flow} />
               </div>

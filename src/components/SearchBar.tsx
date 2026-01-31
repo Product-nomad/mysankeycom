@@ -1,18 +1,21 @@
 import { useState } from 'react';
-import { Search, Sparkles } from 'lucide-react';
+import { Search, Sparkles, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
+  isLoading?: boolean;
 }
 
-const SearchBar = ({ onSearch }: SearchBarProps) => {
+const SearchBar = ({ onSearch, isLoading = false }: SearchBarProps) => {
   const [query, setQuery] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch?.(query);
+    if (query.trim() && !isLoading) {
+      onSearch?.(query);
+    }
   };
 
   return (
@@ -27,13 +30,24 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Enter a company, country, or topic to visualize flow..."
             className="border-0 bg-transparent pl-12 pr-32 py-6 text-base placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+            disabled={isLoading}
           />
           <Button 
             type="submit"
-            className="absolute right-2 gradient-hero text-primary-foreground font-medium px-5 py-2 rounded-lg hover:opacity-90 transition-opacity"
+            disabled={isLoading || !query.trim()}
+            className="absolute right-2 gradient-hero text-primary-foreground font-medium px-5 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Visualize
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Visualize
+              </>
+            )}
           </Button>
         </div>
       </div>
