@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { ChevronDown, ChevronRight, ArrowRight, Shield, HelpCircle, Sparkles } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from 'next-themes';
-import type { SankeyData, ChartSettings } from '@/types/sankey';
+import MobileContextDrawer from './MobileContextDrawer';
+import type { SankeyData, ChartSettings, SankeyLink } from '@/types/sankey';
 import { COLOR_THEMES } from '@/types/sankey';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,22 @@ interface FlowGroup {
   }>;
 }
 
+interface LinkContext {
+  source: string;
+  target: string;
+  value: number;
+  unit?: string;
+  confidence?: 'verified' | 'estimated' | 'projected';
+}
+
+interface NodeContext {
+  name: string;
+  totalValue: number;
+  unit?: string;
+  incomingCount: number;
+  outgoingCount: number;
+}
+
 const ConfidenceIcon = ({ confidence }: { confidence?: string }) => {
   switch (confidence) {
     case 'verified':
@@ -39,6 +56,9 @@ const ConfidenceIcon = ({ confidence }: { confidence?: string }) => {
 
 const MobileFlowView = ({ data, onNodeClick, settings }: MobileFlowViewProps) => {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [linkContext, setLinkContext] = useState<LinkContext | null>(null);
+  const [nodeContext, setNodeContext] = useState<NodeContext | null>(null);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -76,6 +96,40 @@ const MobileFlowView = ({ data, onNodeClick, settings }: MobileFlowViewProps) =>
     }
     setExpandedGroups(newExpanded);
   };
+
+  const handleLinkTap = useCallback((flow: FlowGroup['flows'][0], source: string) => {
+    setLinkContext({
+      source,
+      target: flow.target,
+      value: flow.value,
+      unit: data.unit,
+      confidence: flow.confidence,
+    });
+    setNodeContext(null);
+    setDrawerOpen(true);
+  }, [data.unit]);
+
+  const handleNodeTap = useCallback((nodeName: string) => {
+    const incomingCount = data.links.filter((l) => l.target === nodeName).length;
+    const outgoingCount = data.links.filter((l) => l.source === nodeName).length;
+    const totalValue = data.links
+      .filter((l) => l.target === nodeName || l.source === nodeName)
+      .reduce((sum, l) => sum + l.value, 0);
+
+    setNodeContext({
+      name: nodeName,
+      totalValue,
+      unit: data.unit,
+      incomingCount,
+      outgoingCount,
+    });
+    setLinkContext(null);
+    setDrawerOpen(true);
+  }, [data]);
+
+  const handleDrillDown = useCallback((nodeName: string) => {
+    onNodeClick?.(nodeName);
+  }, [onNodeClick]);
 
   const formatValue = (value: number) => {
     if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`;
@@ -180,7 +234,7 @@ const MobileFlowView = ({ data, onNodeClick, settings }: MobileFlowViewProps) =>
                       .map((flow, flowIdx) => (
                         <button
                           key={flowIdx}
-                          onClick={() => onNodeClick?.(flow.target)}
+                          onClick={() => handleLinkTap(flow, group.source)}
                           className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/30 transition-colors min-h-[44px] border-b border-border/20 last:border-0"
                         >
                           <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
@@ -202,6 +256,15 @@ const MobileFlowView = ({ data, onNodeClick, settings }: MobileFlowViewProps) =>
           })}
         </div>
       </ScrollArea>
+
+      {/* Context Drawer for touch interactions */}
+      <MobileContextDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onDrillDown={handleDrillDown}
+        linkContext={linkContext}
+        nodeContext={nodeContext}
+      />
     </div>
   );
 };

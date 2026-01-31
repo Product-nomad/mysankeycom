@@ -1,7 +1,8 @@
-import { Settings, Palette, AlignLeft, AlignRight, AlignJustify, Droplets } from 'lucide-react';
+import { Settings, Palette, AlignLeft, AlignRight, AlignJustify, Droplets, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Sheet,
   SheetContent,
@@ -124,6 +125,31 @@ const ChartSettings = ({ settings, onSettingsChange }: ChartSettingsProps) => {
               step={0.1}
               className="w-full"
             />
+          </div>
+
+          {/* Node Threshold (Others Grouping) */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-muted-foreground" />
+              <Label>Node Threshold</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              When a source has more than this many links, the smallest 15% are grouped into "Others"
+            </p>
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min={5}
+                max={50}
+                value={settings.nodeThreshold ?? 10}
+                onChange={(e) => onSettingsChange({ 
+                  ...settings, 
+                  nodeThreshold: Math.max(5, Math.min(50, parseInt(e.target.value) || 10)) 
+                })}
+                className="w-20"
+              />
+              <span className="text-sm text-muted-foreground">links</span>
+            </div>
           </div>
         </div>
       </SheetContent>

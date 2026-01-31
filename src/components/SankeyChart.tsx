@@ -1,8 +1,9 @@
-import { useCallback, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
+import { useCallback, useRef, forwardRef, useImperativeHandle, useEffect, useState, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { useTheme } from 'next-themes';
 import type { SankeyData, ChartSettings } from '@/types/sankey';
 import { COLOR_THEMES } from '@/types/sankey';
+import { applyOthersGrouping, type OthersExpansion } from '@/utils/othersGrouping';
 
 interface SankeyChartProps {
   className?: string;
@@ -51,10 +52,13 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
     const chartRef = useRef<ReactECharts>(null);
     const onNodeClickRef = useRef(onNodeClick);
     const { resolvedTheme } = useTheme();
+    const [expandedOthers, setExpandedOthers] = useState<Set<string>>(new Set());
+    
     const chartData = data || defaultData;
     const isDark = resolvedTheme === 'dark';
     const unit = chartData.unit || '';
     const showConfidence = settings?.showConfidence ?? false;
+    const nodeThreshold = settings?.nodeThreshold ?? 10;
 
     useEffect(() => {
       onNodeClickRef.current = onNodeClick;
@@ -62,12 +66,22 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
 
     useImperativeHandle(ref, () => chartRef.current as ReactECharts);
 
-    // Calculate node totals
+    // Apply "Others" grouping algorithm
+    const { processedData, othersMap } = useMemo(() => {
+      const result = applyOthersGrouping(
+        chartData,
+        { nodeThreshold, groupPercentage: 0.15 },
+        expandedOthers
+      );
+      return { processedData: result.data, othersMap: result.othersMap };
+    }, [chartData, nodeThreshold, expandedOthers]);
+
+    // Calculate node totals from processed data
     const nodeTotals = new Map<string, number>();
-    chartData.links.forEach(link => {
+    processedData.links.forEach(link => {
       nodeTotals.set(link.target, (nodeTotals.get(link.target) || 0) + link.value);
       if (!nodeTotals.has(link.source)) {
-        const outgoing = chartData.links
+        const outgoing = processedData.links
           .filter(l => l.source === link.source)
           .reduce((sum, l) => sum + l.value, 0);
         nodeTotals.set(link.source, outgoing);
@@ -91,17 +105,21 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
       }
     };
 
-    // Apply theme colors
-    const themedNodes = chartData.nodes.map((node, index) => {
+    // Apply theme colors to processed data
+    const themedNodes = processedData.nodes.map((node, index) => {
       const themeColors = settings?.theme ? COLOR_THEMES[settings.theme] : COLOR_THEMES.default;
+      const isOthersNode = node.name.includes('→ Others');
       return {
         ...node,
-        itemStyle: { color: themeColors[index % themeColors.length] },
+        itemStyle: { 
+          color: isOthersNode ? 'hsl(var(--muted-foreground))' : themeColors[index % themeColors.length],
+          opacity: isOthersNode ? 0.7 : 1,
+        },
       };
     });
 
     // Apply confidence-based link colors if enabled
-    const themedLinks = chartData.links.map((link) => {
+    const themedLinks = processedData.links.map((link) => {
       if (showConfidence && link.confidence) {
         return {
           ...link,
@@ -140,11 +158,16 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
           if (params.dataType === 'node') {
             const total = nodeTotals.get(params.name) || 0;
             const formattedValue = formatValue(total, unit);
+            const isOthersNode = params.name.includes('→ Others');
+            const actionText = isOthersNode 
+              ? 'Click to expand grouped items' 
+              : 'Click to expand details';
+            
             return `<div style="padding: 2px 0;">
               <strong style="font-size: 14px;">${params.name}</strong>
               ${formattedValue ? `<div style="font-size: 13px; margin-top: 6px; opacity: 0.9;">Total: ${formattedValue}</div>` : ''}
               <div style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 6px;">
-                Click to expand details
+                ${actionText}
               </div>
             </div>`;
           }
@@ -202,8 +225,25 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
 
     const handleChartReady = useCallback((chart: any) => {
       chart.on('click', 'series.sankey', (params: any) => {
-        if (params.dataType === 'node' && onNodeClickRef.current) {
-          onNodeClickRef.current(params.name);
+        if (params.dataType === 'node') {
+          const nodeName = params.name;
+          
+          // Check if this is an "Others" node - if so, expand it
+          if (nodeName.includes('→ Others')) {
+            // Extract the source node name from "Source → Others"
+            const sourceNode = nodeName.replace(' → Others', '');
+            setExpandedOthers((prev) => {
+              const next = new Set(prev);
+              if (next.has(sourceNode)) {
+                next.delete(sourceNode);
+              } else {
+                next.add(sourceNode);
+              }
+              return next;
+            });
+          } else if (onNodeClickRef.current) {
+            onNodeClickRef.current(nodeName);
+          }
         }
       });
 

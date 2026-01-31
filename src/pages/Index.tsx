@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ReactECharts from 'echarts-for-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -10,7 +11,9 @@ import DiagramChat from '@/components/DiagramChat';
 import DataUpload from '@/components/DataUpload';
 import DataSources from '@/components/DataSources';
 import MobileFlowView from '@/components/MobileFlowView';
+import RecentFlows from '@/components/RecentFlows';
 import { useSankeyData } from '@/hooks/useSankeyData';
+import { useFlowCache } from '@/hooks/useFlowCache';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { ChartSettings } from '@/types/sankey';
 import { Zap, Globe, TrendingUp, Database, X, Loader2, ArrowLeft } from 'lucide-react';
@@ -56,6 +59,7 @@ const stats = [
 
 const Index = () => {
   const chartRef = useRef<ReactECharts>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [settings, setSettings] = useState<ChartSettings>({
@@ -63,6 +67,7 @@ const Index = () => {
     nodeAlign: 'justify',
     linkOpacity: 0.5,
     showConfidence: false,
+    nodeThreshold: 10,
   });
 
   const {
@@ -79,6 +84,68 @@ const Index = () => {
     goToBreadcrumb,
     clearData
   } = useSankeyData();
+
+  const { cachedFlows, cacheFlow, getCachedFlow, removeFromCache, clearCache } = useFlowCache();
+
+  // Sync URL with drill-down state
+  useEffect(() => {
+    if (data && currentQuery) {
+      const params = new URLSearchParams();
+      params.set('q', currentQuery);
+      if (breadcrumbs.length > 1) {
+        params.set('node', breadcrumbs[breadcrumbs.length - 1]);
+        params.set('depth', (breadcrumbs.length - 1).toString());
+      }
+      setSearchParams(params, { replace: true });
+    }
+  }, [data, currentQuery, breadcrumbs, setSearchParams]);
+
+  // Restore state from URL on initial load
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query && !data) {
+      // Check cache first
+      const cached = getCachedFlow(query);
+      if (cached) {
+        setDataFromUpload(cached);
+      } else {
+        generateSankeyData(query);
+      }
+    }
+  }, []); // Only run on mount
+
+  // Cache flows after generation
+  useEffect(() => {
+    if (data && currentQuery && currentQuery !== 'Uploaded Data') {
+      cacheFlow(currentQuery, data);
+    }
+  }, [data, currentQuery, cacheFlow]);
+
+  // Handle search with cache check
+  const handleSearch = useCallback(async (query: string) => {
+    const cached = getCachedFlow(query);
+    if (cached) {
+      setDataFromUpload(cached);
+    } else {
+      await generateSankeyData(query);
+    }
+  }, [getCachedFlow, setDataFromUpload, generateSankeyData]);
+
+  // Handle recent flow selection
+  const handleRecentSelect = useCallback((query: string) => {
+    const cached = getCachedFlow(query);
+    if (cached) {
+      setDataFromUpload(cached);
+    } else {
+      generateSankeyData(query);
+    }
+  }, [getCachedFlow, setDataFromUpload, generateSankeyData]);
+
+  // Handle clear with URL reset
+  const handleClear = useCallback(() => {
+    clearData();
+    setSearchParams({}, { replace: true });
+  }, [clearData, setSearchParams]);
 
 
   return (
@@ -112,7 +179,7 @@ const Index = () => {
             </p>
             
             <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              <SearchBar onSearch={generateSankeyData} isLoading={isLoading} />
+              <SearchBar onSearch={handleSearch} isLoading={isLoading} />
             </div>
             
             <div className="flex flex-wrap justify-center gap-4 mt-4 text-xs text-muted-foreground animate-fade-in" style={{ animationDelay: '0.4s' }}>
@@ -129,6 +196,18 @@ const Index = () => {
                 CSV/Excel import
               </span>
             </div>
+
+            {/* Recent Flows (User Vault) */}
+            {!data && cachedFlows.length > 0 && (
+              <div className="animate-fade-in max-w-2xl mx-auto" style={{ animationDelay: '0.5s' }}>
+                <RecentFlows
+                  flows={cachedFlows}
+                  onSelect={handleRecentSelect}
+                  onRemove={removeFromCache}
+                  onClear={clearCache}
+                />
+              </div>
+            )}
           </div>
         </section>
 
@@ -176,7 +255,7 @@ const Index = () => {
                     chartRef={chartRef} 
                   />
                   
-                  <Button variant="outline" onClick={clearData} size="sm" className="btn-glass">
+                  <Button variant="outline" onClick={handleClear} size="sm" className="btn-glass">
                     <X className="w-4 h-4 mr-2" />
                     Clear
                   </Button>
@@ -225,7 +304,7 @@ const Index = () => {
                   key={index} 
                   className="animate-slide-up cursor-pointer" 
                   style={{ animationDelay: `${index * 0.1}s` }}
-                  onClick={() => generateSankeyData(flow.title)}
+                  onClick={() => handleSearch(flow.title)}
                 >
                   <FeatureCard {...flow} />
                 </div>
