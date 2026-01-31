@@ -25,13 +25,7 @@ const Breadcrumbs = ({
         const isHome = index === 0;
         return <div key={index} className="flex items-center gap-1">
               {index > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground/50" />}
-              <button onClick={() => !isLast && onNavigate(index)} disabled={isLast} className={`
-                  flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors
-                  ${isLast ? 'text-foreground font-medium cursor-default' : 'text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer'}
-                `}>
-                {isHome && <Home className="w-3.5 h-3.5" />}
-                
-              </button>
+              
             </div>;
       })}
       </nav>
