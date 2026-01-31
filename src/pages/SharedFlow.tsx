@@ -4,6 +4,7 @@ import { GitBranch, Loader2, AlertCircle, ArrowLeft, Calendar, Share2 } from 'lu
 import { Button } from '@/components/ui/button';
 import SankeyChart from '@/components/SankeyChart';
 import SEOHead from '@/components/SEOHead';
+import FlowJsonLd from '@/components/FlowJsonLd';
 import FlowAnalysis from '@/components/FlowAnalysis';
 import RelatedFlows from '@/components/RelatedFlows';
 import DataSources from '@/components/DataSources';
@@ -160,6 +161,16 @@ const SharedFlow = () => {
           modifiedTime={seoData.modifiedTime}
         />
       )}
+
+      {/* JSON-LD Structured Data */}
+      <FlowJsonLd
+        title={flow.title}
+        description={flow.description}
+        data={flow.data}
+        url={shareUrl}
+        createdAt={flow.created_at}
+        updatedAt={flow.updated_at}
+      />
 
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">

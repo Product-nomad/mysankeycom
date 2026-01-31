@@ -28,6 +28,7 @@ export interface ChartSettings {
   nodeAlign: 'left' | 'right' | 'justify';
   linkOpacity: number;
   showConfidence?: boolean;
+  nodeThreshold?: number; // Default: 10 - triggers "Others" grouping
 }
 
 export interface BreadcrumbItem {
