@@ -115,39 +115,46 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
     const tooltipText = isDark ? 'hsl(210, 20%, 98%)' : 'hsl(220, 25%, 10%)';
     const labelColor = isDark ? 'hsl(210, 20%, 90%)' : 'hsl(220, 25%, 10%)';
 
+    // Calculate dynamic node gap based on number of nodes
+    const nodeCount = chartData.nodes.length;
+    const dynamicNodeGap = Math.max(8, Math.min(20, 180 / nodeCount));
+
     const option = {
       tooltip: {
         trigger: 'item',
         triggerOn: 'mousemove',
         backgroundColor: tooltipBg,
         borderColor: tooltipBorder,
+        borderRadius: 8,
+        padding: [8, 12],
         textStyle: {
           color: tooltipText,
           fontFamily: 'Inter, system-ui, sans-serif',
+          fontSize: 13,
         },
         formatter: (params: any) => {
           if (params.dataType === 'node') {
             const total = nodeTotals.get(params.name) || 0;
             const formattedValue = formatValue(total, unit);
-            return `<div style="padding: 4px 0;">
-              <strong>${params.name}</strong>
-              ${formattedValue ? `<div style="font-size: 12px; margin-top: 4px;">Total: ${formattedValue}</div>` : ''}
-              <div style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 4px;">
+            return `<div style="padding: 2px 0;">
+              <strong style="font-size: 14px;">${params.name}</strong>
+              ${formattedValue ? `<div style="font-size: 13px; margin-top: 6px; opacity: 0.9;">Total: ${formattedValue}</div>` : ''}
+              <div style="font-size: 11px; color: ${isDark ? '#94a3b8' : '#64748b'}; margin-top: 6px;">
                 Click to expand details
               </div>
             </div>`;
           }
           const formattedValue = formatValue(params.data.value, unit);
-          return `<div style="padding: 4px 0;">
-            <strong>${params.data.source} → ${params.data.target}</strong>
-            ${formattedValue ? `<div style="font-size: 12px; margin-top: 4px;">${formattedValue}</div>` : ''}
+          return `<div style="padding: 2px 0;">
+            <strong style="font-size: 14px;">${params.data.source} → ${params.data.target}</strong>
+            ${formattedValue ? `<div style="font-size: 13px; margin-top: 6px; opacity: 0.9;">${formattedValue}</div>` : ''}
           </div>`;
         },
       },
       series: [
         {
           type: 'sankey',
-          layout: 'none',
+          layoutIterations: 32,
           emphasis: {
             focus: 'adjacency',
           },
@@ -157,25 +164,30 @@ const SankeyChart = forwardRef<ReactECharts, SankeyChartProps>(
             curveness: 0.5,
             opacity: linkOpacity,
           },
-          nodeWidth: 16,
-          nodeGap: 12,
-          left: '5%',
-          right: '20%',
-          top: '5%',
-          bottom: '5%',
+          nodeWidth: 14,
+          nodeGap: dynamicNodeGap,
+          left: '2%',
+          right: '18%',
+          top: '3%',
+          bottom: '3%',
           label: {
             fontFamily: 'Inter, system-ui, sans-serif',
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: 500,
             color: labelColor,
             overflow: 'truncate',
-            width: 120,
+            width: 100,
+            lineHeight: 14,
             formatter: (params: any) => {
               const total = nodeTotals.get(params.name) || 0;
+              // Truncate long names
+              const displayName = params.name.length > 18 
+                ? params.name.substring(0, 16) + '...' 
+                : params.name;
               if (total > 0 && unit) {
-                return `${params.name}\n${formatValue(total, unit)}`;
+                return `${displayName}\n${formatValue(total, unit)}`;
               }
-              return params.name;
+              return displayName;
             },
           },
           data: themedNodes,
