@@ -1,0 +1,4 @@
+project_id = "rfawbyaovxshosxddfdg"
+
+[functions.generate-sankey-data]
+verify_jwt = false
