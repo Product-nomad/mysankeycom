@@ -39,7 +39,6 @@ export const useSankeyData = () => {
   const [originalQuery, setOriginalQuery] = useState<string>('');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
-  const [requiresAuth, setRequiresAuth] = useState(false);
 
   const addColorsToNodes = useCallback((nodes: { name: string }[]): SankeyNode[] => {
     return nodes.map((node, index) => ({
@@ -48,27 +47,9 @@ export const useSankeyData = () => {
     }));
   }, []);
 
-  // Check if user is authenticated before making API calls
-  const checkAuth = async (): Promise<boolean> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      setRequiresAuth(true);
-      toast.error('Please sign in to generate diagrams');
-      return false;
-    }
-    setRequiresAuth(false);
-    return true;
-  };
-
   const generateSankeyData = async (query: string) => {
     if (!query.trim()) {
       toast.error('Please enter a search query');
-      return;
-    }
-
-    // Check authentication before proceeding
-    const isAuthenticated = await checkAuth();
-    if (!isAuthenticated) {
       return;
     }
 
@@ -116,12 +97,6 @@ export const useSankeyData = () => {
   const drillDown = async (nodeName: string) => {
     if (!data || !originalQuery) {
       toast.error('No active diagram to drill down from');
-      return;
-    }
-
-    // Check authentication before proceeding
-    const isAuthenticated = await checkAuth();
-    if (!isAuthenticated) {
       return;
     }
 
@@ -225,7 +200,6 @@ export const useSankeyData = () => {
     history,
     breadcrumbs,
     canGoBack,
-    requiresAuth,
     generateSankeyData,
     drillDown,
     goBack,

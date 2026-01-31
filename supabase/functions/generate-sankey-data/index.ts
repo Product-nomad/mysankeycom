@@ -62,41 +62,33 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate the user
+    // Optional authentication - diagram generation works without login
+    // But we track authenticated users for analytics
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      console.error("Missing or invalid Authorization header");
-      return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    let userId: string | null = null;
     
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
+    if (authHeader?.startsWith('Bearer ')) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+      
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    
-    if (claimsError || !claimsData?.claims) {
-      console.error("JWT validation failed:", claimsError);
-      return new Response(
-        JSON.stringify({ error: 'Invalid or expired token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      const token = authHeader.replace('Bearer ', '');
+      const { data: claimsData } = await supabase.auth.getClaims(token);
+      
+      if (claimsData?.claims?.sub) {
+        userId = claimsData.claims.sub as string;
+        console.log(`Authenticated user: ${userId}`);
+      }
     }
-
-    const userId = claimsData.claims.sub;
-    console.log(`Authenticated user: ${userId}`);
 
     const { query, originalQuery, clickedNodeName } = await req.json();
     
     const searchQuery = query || originalQuery;
     const isDrillDown = !!(originalQuery && clickedNodeName);
+
     
     if (!searchQuery || typeof searchQuery !== 'string') {
       return new Response(
@@ -134,7 +126,7 @@ serve(async (req) => {
       ? `Drill down into "${clickedNodeName}" from the topic "${originalQuery}". Show detailed sub-flows.`
       : `Generate a detailed Sankey diagram for: ${searchQuery}`;
 
-    console.log(`Generating Sankey data - User: ${userId}, Query: ${searchQuery}, DrillDown: ${isDrillDown}, Node: ${clickedNodeName || 'N/A'}`);
+    console.log(`Generating Sankey data - User: ${userId || 'anonymous'}, Query: ${searchQuery}, DrillDown: ${isDrillDown}, Node: ${clickedNodeName || 'N/A'}`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
