@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      pending_updates: {
+        Row: {
+          change_percent: number
+          created_at: string
+          flow_id: string
+          id: string
+          new_data: Json
+          new_total_value: number
+          old_data: Json
+          old_total_value: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          change_percent: number
+          created_at?: string
+          flow_id: string
+          id?: string
+          new_data: Json
+          new_total_value: number
+          old_data: Json
+          old_total_value: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          change_percent?: number
+          created_at?: string
+          flow_id?: string
+          id?: string
+          new_data?: Json
+          new_total_value?: number
+          old_data?: Json
+          old_total_value?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_updates_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "user_flows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_updates_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "user_flows_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -40,6 +97,51 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      system_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          flow_id: string | null
+          function_name: string
+          id: string
+          level: string
+          message: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          flow_id?: string | null
+          function_name: string
+          id?: string
+          level?: string
+          message: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          flow_id?: string | null
+          function_name?: string
+          id?: string
+          level?: string
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_logs_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "user_flows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_logs_flow_id_fkey"
+            columns: ["flow_id"]
+            isOneToOne: false
+            referencedRelation: "user_flows_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_flows: {
         Row: {

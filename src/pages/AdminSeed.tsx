@@ -4,9 +4,11 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { Check, X, Loader2, Play, Pause, RotateCcw, Database } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminPendingUpdates from '@/components/AdminPendingUpdates';
 
 const GALLERY_TOPICS = [
   // Geopolitics & Macro (1-10)
@@ -78,15 +80,6 @@ interface TopicProgress {
   slug?: string;
 }
 
-const generateSlug = (title: string): string => {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 100);
-};
-
 const AdminSeed = () => {
   const [progress, setProgress] = useState<Record<number, TopicProgress>>({});
   const [isRunning, setIsRunning] = useState(false);
@@ -104,7 +97,6 @@ const AdminSeed = () => {
     setProgress(prev => ({ ...prev, [topic.id]: { status: 'generating' } }));
 
     try {
-      // Call the seed edge function
       const { data, error } = await supabase.functions.invoke('seed-gallery-flow', {
         body: { 
           title: topic.title,
@@ -139,25 +131,21 @@ const AdminSeed = () => {
     toast.info('Starting Gallery of Truth seeding...');
 
     for (const topic of GALLERY_TOPICS) {
-      // Check for abort
       if (abortRef.current) {
         toast.warning('Seeding aborted');
         break;
       }
 
-      // Check for pause
       while (pauseRef.current && !abortRef.current) {
         await delay(500);
       }
 
-      // Skip already completed topics
       if (progress[topic.id]?.status === 'success') {
         continue;
       }
 
       await generateSingleFlow(topic);
 
-      // Add delay between generations to avoid rate limiting
       if (!abortRef.current) {
         await delay(2000);
       }
@@ -237,108 +225,121 @@ const AdminSeed = () => {
 
   return (
     <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <Card className="glass border-border/50">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Database className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl">Gallery of Truth Seeder</CardTitle>
-                <CardDescription>
-                  Generate 50 high-fidelity Sankey flows with 2026 data
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Progress Overview */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">
-                  {completedCount} / {GALLERY_TOPICS.length} completed
-                  {errorCount > 0 && <span className="text-red-500 ml-2">({errorCount} failed)</span>}
-                </span>
-              </div>
-              <Progress value={progressPercent} className="h-3" />
-            </div>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <Tabs defaultValue="seeder" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="seeder">Gallery Seeder</TabsTrigger>
+            <TabsTrigger value="autopilot">Auto-Pilot Engine</TabsTrigger>
+          </TabsList>
 
-            {/* Controls */}
-            <div className="flex flex-wrap gap-3">
-              {!isRunning ? (
-                <Button onClick={startSeeding} className="gap-2">
-                  <Play className="w-4 h-4" />
-                  Start Seeding
-                </Button>
-              ) : isPaused ? (
-                <Button onClick={resumeSeeding} className="gap-2">
-                  <Play className="w-4 h-4" />
-                  Resume
-                </Button>
-              ) : (
-                <Button onClick={pauseSeeding} variant="secondary" className="gap-2">
-                  <Pause className="w-4 h-4" />
-                  Pause
-                </Button>
-              )}
-              
-              <Button 
-                onClick={resetSeeding} 
-                variant="outline" 
-                className="gap-2"
-                disabled={Object.keys(progress).length === 0}
-              >
-                <RotateCcw className="w-4 h-4" />
-                Reset
-              </Button>
-
-              {errorCount > 0 && !isRunning && (
-                <Button onClick={retryFailed} variant="outline" className="gap-2">
-                  <RotateCcw className="w-4 h-4" />
-                  Retry {errorCount} Failed
-                </Button>
-              )}
-            </div>
-
-            {/* Topic List */}
-            <ScrollArea className="h-[500px] rounded-lg border border-border/50 p-4">
-              <div className="space-y-2">
-                {GALLERY_TOPICS.map((topic) => (
-                  <div
-                    key={topic.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                      progress[topic.id]?.status === 'generating' 
-                        ? 'bg-primary/5 border-primary/30' 
-                        : progress[topic.id]?.status === 'success'
-                        ? 'bg-green-500/5 border-green-500/30'
-                        : progress[topic.id]?.status === 'error'
-                        ? 'bg-red-500/5 border-red-500/30'
-                        : 'bg-muted/30 border-border/30'
-                    }`}
-                  >
-                    <span className="text-sm text-muted-foreground w-6">
-                      {topic.id}
-                    </span>
-                    {getStatusIcon(progress[topic.id]?.status || 'pending')}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{topic.title}</p>
-                      {progress[topic.id]?.error && (
-                        <p className="text-xs text-red-400 truncate">
-                          {progress[topic.id].error}
-                        </p>
-                      )}
-                    </div>
-                    <Badge variant="outline" className={getCategoryColor(topic.category)}>
-                      {topic.category.split(' ')[0]}
-                    </Badge>
+          <TabsContent value="seeder">
+            <Card className="glass border-border/50">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                    <Database className="w-6 h-6 text-primary" />
                   </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                  <div>
+                    <CardTitle className="text-2xl">Gallery of Truth Seeder</CardTitle>
+                    <CardDescription>
+                      Generate 50 high-fidelity Sankey flows with 2026 data
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Progress Overview */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Progress</span>
+                    <span className="font-medium">
+                      {completedCount} / {GALLERY_TOPICS.length} completed
+                      {errorCount > 0 && <span className="text-destructive ml-2">({errorCount} failed)</span>}
+                    </span>
+                  </div>
+                  <Progress value={progressPercent} className="h-3" />
+                </div>
+
+                {/* Controls */}
+                <div className="flex flex-wrap gap-3">
+                  {!isRunning ? (
+                    <Button onClick={startSeeding} className="gap-2">
+                      <Play className="w-4 h-4" />
+                      Start Seeding
+                    </Button>
+                  ) : isPaused ? (
+                    <Button onClick={resumeSeeding} className="gap-2">
+                      <Play className="w-4 h-4" />
+                      Resume
+                    </Button>
+                  ) : (
+                    <Button onClick={pauseSeeding} variant="secondary" className="gap-2">
+                      <Pause className="w-4 h-4" />
+                      Pause
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    onClick={resetSeeding} 
+                    variant="outline" 
+                    className="gap-2"
+                    disabled={Object.keys(progress).length === 0}
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Reset
+                  </Button>
+
+                  {errorCount > 0 && !isRunning && (
+                    <Button onClick={retryFailed} variant="outline" className="gap-2">
+                      <RotateCcw className="w-4 h-4" />
+                      Retry {errorCount} Failed
+                    </Button>
+                  )}
+                </div>
+
+                {/* Topic List */}
+                <ScrollArea className="h-[500px] rounded-lg border border-border/50 p-4">
+                  <div className="space-y-2">
+                    {GALLERY_TOPICS.map((topic) => (
+                      <div
+                        key={topic.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                          progress[topic.id]?.status === 'generating' 
+                            ? 'bg-primary/5 border-primary/30' 
+                            : progress[topic.id]?.status === 'success'
+                            ? 'bg-accent/50 border-accent'
+                            : progress[topic.id]?.status === 'error'
+                            ? 'bg-destructive/10 border-destructive/30'
+                            : 'bg-muted/30 border-border/30'
+                        }`}
+                      >
+                        <span className="text-sm text-muted-foreground w-6">
+                          {topic.id}
+                        </span>
+                        {getStatusIcon(progress[topic.id]?.status || 'pending')}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{topic.title}</p>
+                          {progress[topic.id]?.error && (
+                            <p className="text-xs text-destructive truncate">
+                              {progress[topic.id].error}
+                            </p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className={getCategoryColor(topic.category)}>
+                          {topic.category.split(' ')[0]}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="autopilot">
+            <AdminPendingUpdates />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
