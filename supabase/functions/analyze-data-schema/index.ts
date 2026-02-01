@@ -37,6 +37,11 @@ A Sankey diagram requires:
 - TARGET: The destination node (e.g., "Destination", "To", "Customer", "Product")
 - VALUE: A numeric quantity representing flow (e.g., "Amount", "Count", "Sales", "Quantity")
 
+Also determine the FLOW TYPE:
+- "financial": Revenue/Expenses/Costs/Profit flows (uses currency units like USD, EUR)
+- "quantity": Units/Inventory/Volume flows (uses units like kg, units, items)
+- "generic": General categorical flows
+
 If no clear VALUE column exists, suggest using frequency counting (counting occurrences of Source-Target pairs).
 
 Respond with ONLY a valid JSON object (no markdown, no explanation):
@@ -46,7 +51,9 @@ Respond with ONLY a valid JSON object (no markdown, no explanation):
   "valueColumn": "exact column name or null",
   "useFrequencyCount": true/false,
   "confidence": "high" | "medium" | "low",
-  "explanation": "brief explanation of why these columns were chosen"
+  "flowType": "financial" | "quantity" | "generic",
+  "suggestedUnit": "USD" | "Units" | "Value" | other appropriate unit,
+  "explanation": "brief explanation of why these columns were chosen and the detected flow type"
 }`;
 
     console.log('Analyzing schema with headers:', headers);
