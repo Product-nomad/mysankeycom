@@ -1,73 +1,39 @@
-# Welcome to your Lovable project
+# MySankey
 
-## Project info
+**AI-powered interactive Sankey diagrams.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Transform complex flow data — energy mix, financial cashflows, trade routes, supply chains, customer journeys — into clean, shareable Sankey diagrams. Drop in a CSV or describe your flow in natural language; MySankey handles the layout, colouring, and tooltips.
 
-## How can I edit this code?
+## Who it's for
 
-There are several ways of editing your application.
+- Analysts visualising where resources, money, or users move through a system.
+- Finance and energy reporting teams producing annual-report-style flow diagrams without wrestling D3 directly.
+- Anyone who's tried to build a Sankey in a spreadsheet and given up.
 
-**Use Lovable**
+## What it does
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- Accepts flow data as CSV or pasted table.
+- AI-assisted interpretation: describe the flow in plain English and get a draft diagram back.
+- Interactive highlighting — click a node or link to isolate a path through the diagram.
+- Export to SVG / PNG for slide decks and reports.
+- Presets for common domains (energy, finance, trade, supply chain).
 
-Changes made via Lovable will be committed automatically to this repo.
+## Stack
 
-**Use your preferred IDE**
+- [Vite](https://vitejs.dev) + React + TypeScript
+- [shadcn/ui](https://ui.shadcn.com) + Tailwind — UI
+- D3 / Sankey layout
+- [Bun](https://bun.sh) — runtime
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Getting started
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+bun install
+bun run dev
 ```
 
-**Edit a file directly in GitHub**
+Open the URL the dev server prints.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Licence
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT.
